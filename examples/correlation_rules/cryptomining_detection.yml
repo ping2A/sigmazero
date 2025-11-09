@@ -1,0 +1,26 @@
+title: Cryptomining Activity Detection
+id: cryptomining-001
+description: Detects multiple indicators of cryptocurrency mining activity
+status: stable
+level: medium
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal
+  rules:
+    - mining-pool-connection
+    - high-cpu-process
+    - mining-binary-execution
+  timespan: 15m
+  condition:
+    gte: 2
+  group-by:
+    - host
+    - user
+
+tags:
+  - attack.impact
+  - attack.resource_hijacking
+  - attack.t1496  # Resource Hijacking
+  - correlation.cryptomining

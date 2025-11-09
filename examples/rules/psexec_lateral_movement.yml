@@ -1,0 +1,27 @@
+title: PsExec Lateral Movement
+id: psexec-lateral-movement
+status: stable
+description: Detects use of PsExec for lateral movement
+level: medium
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: process_creation
+  product: windows
+
+detection:
+  selection:
+    process_name|contains:
+      - psexec
+  condition: selection
+
+falsepositives:
+  - Legitimate system administration
+  - IT support activities
+
+tags:
+  - attack.lateral_movement
+  - attack.execution
+  - attack.t1021.002  # SMB/Windows Admin Shares
+  - attack.t1569.002  # Service Execution

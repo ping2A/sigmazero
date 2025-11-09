@@ -1,0 +1,27 @@
+title: File Deletion
+id: file-deletion
+status: stable
+description: Detects file deletion events
+level: informational
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: file_event
+  product: windows
+
+detection:
+  selection:
+    event_type: file_deletion
+    action: delete
+  condition: selection
+
+falsepositives:
+  - Normal file operations
+  - Cleanup operations
+
+tags:
+  - attack.defense_evasion
+  - attack.impact
+  - attack.t1485  # Data Destruction
+  - attack.t1070  # Indicator Removal

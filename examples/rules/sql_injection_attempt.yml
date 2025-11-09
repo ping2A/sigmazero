@@ -1,0 +1,40 @@
+title: SQL Injection Attempt
+id: sql-injection-attempt
+status: stable
+description: Detects SQL injection attempts in web requests
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: web_request
+  product: waf
+
+detection:
+  selection:
+    event_type: web_request
+    request_content|contains:
+      - ' OR 1=1
+      - ' OR '1'='1
+      - ' OR 'a'='a
+      - '; DROP TABLE
+      - '; DELETE FROM
+      - ' UNION SELECT
+      - ' AND 1=1
+      - admin'--
+      - admin'#
+      - ' OR ''='
+      - EXEC sp_
+      - EXEC xp_
+      - xp_cmdshell
+  condition: selection
+
+falsepositives:
+  - Legitimate queries containing SQL-like syntax
+  - Security testing (authorized)
+  - Web application scanners
+
+tags:
+  - attack.initial_access
+  - attack.t1190  # Exploit Public-Facing Application
+  - attack.t1059.007  # SQL

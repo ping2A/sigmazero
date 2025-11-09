@@ -1,0 +1,19 @@
+title: Base64 Encoded Command Detection
+id: 11223344-5566-7788-99aa-bbccddeeff00
+description: Detects base64 encoded malicious commands
+status: experimental
+level: high
+detection:
+  selection:
+    event_type: 'process_creation'
+    command_line|base64:
+      - 'invoke-expression'
+      - 'downloadstring'
+      - 'iex'
+      - 'webclient'
+  condition: selection
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.t1027
+  - attack.t1059.001

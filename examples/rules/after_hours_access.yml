@@ -1,0 +1,35 @@
+title: After Hours Access
+id: after-hours-access
+status: experimental
+description: Detects system access during non-business hours which may indicate insider threat
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: authentication
+  product: windows
+
+detection:
+  selection:
+    event_type: authentication
+    status: success
+  time_filter:
+    hour|gte: 22  # After 10 PM
+  time_filter2:
+    hour|lte: 6   # Before 6 AM
+  weekend_filter:
+    day_of_week:
+      - saturday
+      - sunday
+  condition: selection and (time_filter or time_filter2 or weekend_filter)
+
+falsepositives:
+  - Authorized overtime work
+  - Global teams in different time zones
+  - Scheduled maintenance
+  - On-call support staff
+
+tags:
+  - attack.persistence
+  - attack.t1078  # Valid Accounts

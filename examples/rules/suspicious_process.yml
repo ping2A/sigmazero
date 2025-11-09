@@ -1,0 +1,23 @@
+title: Suspicious Process Execution
+id: 12345678-1234-1234-1234-123456789abc
+description: Detects execution of suspicious processes commonly used by attackers
+status: experimental
+level: high
+detection:
+  selection:
+    process_name:
+      - '*powershell.exe'
+      - '*cmd.exe'
+      - '*wscript.exe'
+      - '*cscript.exe'
+      - '*mimikatz*'
+      - '*psexec*'
+    command_line:
+      - '*-enc*'
+      - '*-encodedcommand*'
+      - '*bypass*'
+      - '*downloadstring*'
+  condition: selection
+tags:
+  - attack.execution
+  - attack.t1059

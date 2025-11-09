@@ -1,0 +1,18 @@
+title: Multi-Condition Process Detection with All Modifier
+id: 00112233-4455-6677-8899-aabbccddeeff
+description: Detects processes that must match all specified conditions
+status: experimental
+level: critical
+detection:
+  selection:
+    process_name|contains|all:
+      - 'cmd'
+      - 'exe'
+    command_line|contains|all:
+      - 'net'
+      - 'user'
+      - 'add'
+  condition: selection
+tags:
+  - attack.persistence
+  - attack.t1136

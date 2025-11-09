@@ -1,0 +1,26 @@
+title: Complete Privilege Escalation Chain
+id: privesc-chain-001
+description: Detects reconnaissance, credential dumping, and privilege escalation sequence
+status: stable
+level: critical
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal_ordered
+  rules:
+    - whoami-reconnaissance
+    - credential-dumping
+    - admin-account-usage
+  timespan: 30m
+  group-by:
+    - user
+    - host
+
+tags:
+  - attack.privilege_escalation
+  - attack.credential_access
+  - attack.t1078.002  # Domain Accounts
+  - attack.t1003      # OS Credential Dumping
+  - attack.t1087      # Account Discovery
+  - correlation.privilege_escalation

@@ -1,0 +1,19 @@
+title: Suspicious PowerShell Execution with StartsWith Modifier
+id: aabbccdd-1111-2222-3333-444455556666
+description: Detects PowerShell commands that start with specific suspicious patterns
+status: experimental
+level: high
+detection:
+  selection:
+    process_name|endswith:
+      - 'powershell.exe'
+      - 'pwsh.exe'
+    command_line|startswith:
+      - 'powershell -enc'
+      - 'powershell -encodedcommand'
+      - 'powershell.exe -w hidden'
+      - 'pwsh -nop'
+  condition: selection
+tags:
+  - attack.execution
+  - attack.t1059.001

@@ -1,0 +1,18 @@
+title: Suspicious Process Execution (Not Legitimate)
+id: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+description: Detects suspicious process execution excluding legitimate system processes
+status: experimental
+level: high
+detection:
+  selection_suspicious:
+    process_name:
+      - '*powershell.exe'
+      - '*cmd.exe'
+  filter_legitimate:
+    command_line|contains:
+      - 'Windows\\System32'
+      - 'Program Files'
+  condition: selection_suspicious and not filter_legitimate
+tags:
+  - attack.execution
+  - attack.t1059

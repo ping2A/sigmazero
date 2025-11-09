@@ -1,0 +1,20 @@
+title: Field Modifiers Example
+id: 99998888-7777-6666-5555-444444444444
+description: Demonstrates various field modifiers like startswith, endswith, contains, regex
+status: experimental
+level: medium
+detection:
+  selection_startswith:
+    command_line|startswith: 'powershell'
+  selection_endswith:
+    file_path|endswith: '.exe'
+  selection_contains:
+    command_line|contains|all:
+      - 'bypass'
+      - 'executionpolicy'
+  selection_regex:
+    command_line|re: '.*-enc[oded]*\s+[A-Za-z0-9+/=]{50,}.*'
+  condition: selection_startswith or selection_endswith or selection_contains or selection_regex
+tags:
+  - attack.defense_evasion
+  - attack.t1140

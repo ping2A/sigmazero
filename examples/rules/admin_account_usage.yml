@@ -1,0 +1,30 @@
+title: Admin Account Usage
+id: admin-account-usage
+status: stable
+description: Detects usage of administrator accounts
+level: medium
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: authentication
+  product: windows
+
+detection:
+  selection:
+    event_type: authentication
+    user:
+      - administrator
+      - admin
+      - root
+      - SYSTEM
+    status: success
+  condition: selection
+
+falsepositives:
+  - Legitimate admin activities
+  - Scheduled tasks
+
+tags:
+  - attack.privilege_escalation
+  - attack.t1078.002  # Domain Accounts

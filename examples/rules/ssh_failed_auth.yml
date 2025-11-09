@@ -1,0 +1,26 @@
+title: SSH Authentication Failed
+id: ssh-authentication-failed
+status: stable
+description: Detects failed SSH authentication attempts
+level: low
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: authentication
+  product: linux
+
+detection:
+  selection:
+    event_type: authentication
+    protocol: ssh
+    status: failed
+  condition: selection
+
+falsepositives:
+  - Legitimate password typos
+  - Misconfigured automation
+
+tags:
+  - attack.credential_access
+  - attack.t1110.001  # Password Guessing

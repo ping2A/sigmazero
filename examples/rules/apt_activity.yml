@@ -1,0 +1,26 @@
+title: Advanced Persistent Threat Activity
+id: 99999999-9999-9999-9999-999999999999
+description: Detects potential APT activity combining multiple indicators
+status: experimental
+level: critical
+detection:
+  selection_suspicious_process:
+    process_name:
+      - '*powershell.exe'
+      - '*cmd.exe'
+  selection_suspicious_command:
+    command_line:
+      - '*-enc*'
+      - '*bypass*'
+      - '*downloadstring*'
+      - '*invoke-expression*'
+  selection_network:
+    destination_domain:
+      - '*pastebin.com*'
+      - '*raw.githubusercontent.com*'
+  condition: selection_suspicious_process and selection_suspicious_command
+tags:
+  - attack.execution
+  - attack.command_and_control
+  - attack.t1059
+  - attack.t1071

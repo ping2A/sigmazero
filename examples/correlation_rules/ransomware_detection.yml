@@ -1,0 +1,28 @@
+title: Ransomware Activity Pattern
+id: ransomware-pattern-001
+description: Detects ransomware deployment pattern with shadow copy deletion and mass file encryption
+status: stable
+level: critical
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal
+  rules:
+    - vssadmin-shadow-deletion
+    - mass-file-modification
+    - suspicious-file-extension-change
+    - ransomware-note-creation
+  timespan: 1h
+  condition:
+    gte: 3
+  group-by:
+    - host
+    - user
+
+tags:
+  - attack.impact
+  - attack.defense_evasion
+  - attack.t1486  # Data Encrypted for Impact
+  - attack.t1490  # Inhibit System Recovery
+  - correlation.ransomware

@@ -1,0 +1,40 @@
+title: Large Outbound Data Transfer
+id: large-outbound-transfer
+status: stable
+description: Detects unusually large outbound network transfers indicating possible data exfiltration
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: network_connection
+  product: windows
+
+detection:
+  selection:
+    event_type: network_connection
+    direction: outbound
+    bytes_sent|gte: 104857600  # 100MB or more
+  filter_internal:
+    destination_ip|startswith:
+      - '10.'
+      - '172.16.'
+      - '192.168.'
+  filter_trusted:
+    destination_domain|endswith:
+      - microsoft.com
+      - windows.com
+      - office.com
+      - office365.com
+  condition: selection and not filter_internal and not filter_trusted
+
+falsepositives:
+  - Legitimate file uploads
+  - Cloud backup operations
+  - Software updates
+  - Video conferencing
+
+tags:
+  - attack.exfiltration
+  - attack.t1041  # Exfiltration Over C2 Channel
+  - attack.t1048  # Exfiltration Over Alternative Protocol

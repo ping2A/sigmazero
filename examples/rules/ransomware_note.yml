@@ -1,0 +1,34 @@
+title: Ransomware Note Creation
+id: ransomware-note-creation
+status: stable
+description: Detects creation of common ransomware note files
+level: critical
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: file_event
+  product: windows
+
+detection:
+  selection:
+    event_type: file_creation
+    file_path|contains:
+      - README
+      - DECRYPT
+      - RECOVERY
+      - RESTORE
+      - HOW_TO
+    file_path|endswith:
+      - .txt
+      - .html
+      - .hta
+  condition: selection
+
+falsepositives:
+  - Legitimate README files
+  - Documentation
+
+tags:
+  - attack.impact
+  - attack.t1486  # Data Encrypted for Impact

@@ -1,0 +1,42 @@
+title: Suspicious PowerShell with Encoded Command
+id: suspicious-powershell-encoded
+status: stable
+description: Detects PowerShell execution with encoded commands, often used for obfuscation
+level: high
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: process_creation
+  product: windows
+
+detection:
+  selection:
+    process_name|endswith: powershell.exe
+  suspicious_flags:
+    command_line|contains:
+      - -EncodedCommand
+      - -enc  
+      - -ec
+      - -WindowStyle Hidden
+      - -w hidden
+      - -ExecutionPolicy Bypass
+      - -ep bypass
+      - -nop
+      - -NoProfile
+      - DownloadString
+      - IEX
+      - Invoke-Expression
+      - Net.WebClient
+      - Invoke-Mimikatz
+  condition: selection and suspicious_flags
+
+falsepositives:
+  - Legitimate automation scripts
+  - Software deployment
+
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.t1059.001  # PowerShell
+  - attack.t1027      # Obfuscated Files or Information

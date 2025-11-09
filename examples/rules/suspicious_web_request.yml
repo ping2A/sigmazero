@@ -1,0 +1,47 @@
+title: Suspicious Web Request
+id: suspicious-web-request
+status: stable
+description: Detects suspicious web requests indicating potential web attacks
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: web_request
+  product: waf
+
+detection:
+  selection:
+    event_type: web_request
+  suspicious_uri:
+    request_uri|contains:
+      - ../
+      - ..\\
+      - /etc/passwd
+      - /etc/shadow
+      - /windows/win.ini
+      - cmd.exe
+      - powershell.exe
+      - <script>
+      - javascript:
+      - onerror=
+      - onload=
+      - eval(
+      - base64,
+  suspicious_method:
+    request_method:
+      - PUT
+      - DELETE
+      - TRACE
+      - CONNECT
+  condition: selection and (suspicious_uri or suspicious_method)
+
+falsepositives:
+  - Legitimate application functionality
+  - Web development/testing
+  - Administrative tasks
+
+tags:
+  - attack.initial_access
+  - attack.t1190  # Exploit Public-Facing Application
+  - attack.t1059  # Command and Scripting Interpreter

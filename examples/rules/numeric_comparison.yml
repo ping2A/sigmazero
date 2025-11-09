@@ -1,0 +1,14 @@
+title: Large File Transfer Detection
+id: 88887777-6666-5555-4444-333333333333
+description: Detects large file transfers or high port numbers
+status: experimental
+level: medium
+detection:
+  selection_large_transfer:
+    bytes_transferred|gte: 1000000
+  selection_high_port:
+    destination_port|gt: 50000
+  condition: selection_large_transfer or selection_high_port
+tags:
+  - attack.exfiltration
+  - attack.t1041

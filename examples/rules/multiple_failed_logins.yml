@@ -1,0 +1,27 @@
+title: Multiple Failed Login Attempts
+id: multiple-failed-logins
+status: stable
+description: Detects multiple failed authentication attempts indicating possible credential guessing
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: authentication
+  product: windows
+
+detection:
+  selection:
+    event_type: authentication
+    status: failed
+  timeframe: 5m
+  condition: selection | count() >= 5
+
+falsepositives:
+  - User password typos
+  - Misconfigured applications
+  - Password expiration
+
+tags:
+  - attack.credential_access
+  - attack.t1110.001  # Password Guessing

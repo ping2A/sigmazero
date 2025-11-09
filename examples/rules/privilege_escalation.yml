@@ -1,0 +1,20 @@
+title: Privilege Escalation Attempt
+id: 11111111-2222-3333-4444-555555555555
+description: Detects attempts to escalate privileges using common techniques
+status: stable
+level: high
+detection:
+  selection_user:
+    user:
+      - 'SYSTEM'
+      - 'root'
+      - 'administrator'
+  selection_action:
+    action:
+      - 'privilege_escalation'
+      - 'elevation'
+      - 'runas'
+  condition: selection_user and selection_action
+tags:
+  - attack.privilege_escalation
+  - attack.t1068

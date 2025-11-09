@@ -1,0 +1,37 @@
+title: Bulk Sensitive File Access
+id: sensitive-file-access-bulk
+status: stable
+description: Detects bulk access to sensitive files indicating data collection
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: file_access
+  product: windows
+
+detection:
+  selection:
+    event_type: file_access
+    action: read
+    file_path|contains:
+      - \Finance\
+      - \HR\
+      - \Legal\
+      - \Confidential\
+      - \Executive\
+      - \Payroll\
+      - \Personnel\
+      - \M&A\
+      - \Strategy\
+  condition: selection
+
+falsepositives:
+  - Authorized access by HR/Finance personnel
+  - Backup operations
+  - Compliance audits
+
+tags:
+  - attack.collection
+  - attack.t1005  # Data from Local System
+  - attack.t1039  # Data from Network Shared Drive

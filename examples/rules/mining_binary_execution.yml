@@ -1,0 +1,42 @@
+title: Cryptocurrency Mining Binary Execution
+id: mining-binary-execution
+status: stable
+description: Detects execution of known cryptocurrency mining software
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: process_creation
+  product: windows
+
+detection:
+  selection_process:
+    process_name|contains:
+      - xmrig
+      - minergate
+      - cpuminer
+      - ccminer
+      - cgminer
+      - bfgminer
+      - nheqminer
+      - ethminer
+      - phoenixminer
+  selection_command:
+    command_line|contains:
+      - --algo=
+      - --donate-level
+      - stratum+tcp
+      - -o pool.
+      - --cuda
+      - --opencl
+  condition: selection_process or selection_command
+
+falsepositives:
+  - Authorized mining operations
+  - Security research
+  - Blockchain development
+
+tags:
+  - attack.impact
+  - attack.t1496  # Resource Hijacking

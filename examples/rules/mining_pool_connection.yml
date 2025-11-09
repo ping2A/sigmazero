@@ -1,0 +1,41 @@
+title: Connection to Cryptocurrency Mining Pool
+id: mining-pool-connection
+status: stable
+description: Detects network connections to known cryptocurrency mining pools
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: network_connection
+  product: windows
+
+detection:
+  selection:
+    event_type: network_connection
+    destination_domain|contains:
+      - pool.
+      - mining.
+      - stratum.
+      - xmr-node
+      - moneropool
+      - nanopool
+      - ethermine
+      - f2pool
+      - antpool
+    destination_port:
+      - 3333
+      - 4444
+      - 5555
+      - 7777
+      - 8888
+      - 9999
+  condition: selection
+
+falsepositives:
+  - Authorized cryptocurrency operations
+  - Blockchain development
+
+tags:
+  - attack.impact
+  - attack.t1496  # Resource Hijacking

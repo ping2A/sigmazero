@@ -1,0 +1,28 @@
+title: Network Reconnaissance and Exploitation
+id: network-recon-exploit-001
+description: Detects port scanning followed by exploitation attempt from same source
+status: stable
+level: high
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal
+  rules:
+    - port-scan-detected
+    - vulnerability-scan
+    - exploit-attempt
+  timespan: 1h
+  condition:
+    gte: 2
+  group-by:
+    - source_ip
+    - destination_ip
+
+tags:
+  - attack.reconnaissance
+  - attack.initial_access
+  - attack.t1046  # Network Service Scanning
+  - attack.t1595  # Active Scanning
+  - attack.t1190  # Exploit Public-Facing Application
+  - correlation.reconnaissance

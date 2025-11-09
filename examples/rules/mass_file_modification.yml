@@ -1,0 +1,28 @@
+title: Mass File Modification
+id: mass-file-modification
+status: experimental
+description: Detects suspicious mass file modifications potentially indicating ransomware
+level: high
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: file_event
+  product: windows
+
+detection:
+  selection:
+    event_type: file_modification
+    action:
+      - modify
+      - rename
+      - encrypt
+  condition: selection
+
+falsepositives:
+  - Software updates
+  - Legitimate file operations
+
+tags:
+  - attack.impact
+  - attack.t1486  # Data Encrypted for Impact

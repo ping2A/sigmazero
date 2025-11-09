@@ -1,0 +1,24 @@
+title: Web Application Attack Chain
+id: web-attack-chain-001
+description: Detects SQL injection or XSS attempts followed by successful authentication or data access
+status: experimental
+level: high
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal_ordered
+  rules:
+    - sql-injection-attempt
+    - suspicious-web-request
+    - unauthorized-data-access
+  timespan: 30m
+  group-by:
+    - source_ip
+
+tags:
+  - attack.initial_access
+  - attack.credential_access
+  - attack.t1190  # Exploit Public-Facing Application
+  - attack.t1213  # Data from Information Repositories
+  - correlation.web_attack

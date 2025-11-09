@@ -1,0 +1,15 @@
+{"timestamp": "2025-11-06T10:15:30Z", "event_type": "process_creation", "process_name": "powershell.exe", "command_line": "powershell.exe -enc ZQBjAGgAbwAgACIASABlAGwAbABvACIACgA=", "user": "john.doe", "source_ip": "192.168.1.50"}
+{"timestamp": "2025-11-06T10:16:45Z", "event_type": "network_connection", "destination_domain": "google.com", "destination_ip": "142.250.185.46", "source_ip": "192.168.1.50", "port": 443}
+{"timestamp": "2025-11-06T10:17:20Z", "event_type": "network_connection", "destination_domain": "malicious-site.com", "destination_ip": "203.0.113.50", "source_ip": "192.168.1.50", "port": 8080}
+{"timestamp": "2025-11-06T10:18:00Z", "event_type": "process_creation", "process_name": "notepad.exe", "command_line": "notepad.exe document.txt", "user": "jane.smith", "source_ip": "192.168.1.51"}
+{"timestamp": "2025-11-06T10:19:15Z", "event_type": "file_access", "file_path": "/etc/passwd", "user": "root", "action": "read"}
+{"timestamp": "2025-11-06T10:20:30Z", "event_type": "process_creation", "process_name": "cmd.exe", "command_line": "cmd.exe /c net user attacker password /add", "user": "SYSTEM", "source_ip": "192.168.1.52"}
+{"timestamp": "2025-11-06T10:21:45Z", "event_type": "network_connection", "destination_domain": "evil-domain.net", "destination_ip": "198.51.100.20", "source_ip": "10.0.0.100", "port": 4444}
+{"timestamp": "2025-11-06T10:22:00Z", "event_type": "authentication", "user": "administrator", "action": "elevation", "status": "success"}
+{"timestamp": "2025-11-06T10:23:15Z", "event_type": "process_creation", "process_name": "mimikatz.exe", "command_line": "mimikatz.exe sekurlsa::logonpasswords", "user": "attacker", "source_ip": "192.168.1.100"}
+{"timestamp": "2025-11-06T10:24:30Z", "event_type": "network_connection", "destination_domain": "microsoft.com", "destination_ip": "20.112.52.29", "source_ip": "192.168.1.50", "port": 443}
+{"timestamp": "2025-11-06T10:25:45Z", "event_type": "file_creation", "file_path": "/tmp/backdoor.sh", "user": "www-data", "size": 2048}
+{"timestamp": "2025-11-06T10:26:00Z", "event_type": "network_connection", "destination_ip": "10.0.0.50", "source_ip": "192.168.1.53", "port": 22}
+{"timestamp": "2025-11-06T10:27:15Z", "event_type": "process_creation", "process_name": "wscript.exe", "command_line": "wscript.exe malware.vbs", "user": "victim", "source_ip": "192.168.1.54"}
+{"timestamp": "2025-11-06T10:28:30Z", "event_type": "authentication", "user": "root", "action": "privilege_escalation", "status": "success"}
+{"timestamp": "2025-11-06T10:29:45Z", "event_type": "process_creation", "process_name": "explorer.exe", "command_line": "explorer.exe", "user": "john.doe", "source_ip": "192.168.1.50"}

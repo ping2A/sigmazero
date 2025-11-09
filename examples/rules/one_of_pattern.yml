@@ -1,0 +1,24 @@
+title: Multiple Suspicious Indicators
+id: 11112222-3333-4444-5555-666666666666
+description: Detects when at least one of multiple suspicious patterns is present
+status: experimental
+level: high
+detection:
+  selection_powershell:
+    process_name: '*powershell.exe'
+    command_line|contains:
+      - 'invoke-expression'
+      - 'downloadstring'
+  selection_cmd:
+    process_name: '*cmd.exe'
+    command_line|contains:
+      - '/c del'
+      - '/c reg add'
+  selection_wscript:
+    process_name:
+      - '*wscript.exe'
+      - '*cscript.exe'
+  condition: 1 of selection_*
+tags:
+  - attack.execution
+  - attack.t1059

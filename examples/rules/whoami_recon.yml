@@ -1,0 +1,30 @@
+title: Whoami Command Execution
+id: whoami-reconnaissance
+status: stable
+description: Detects execution of whoami command for reconnaissance
+level: low
+author: Security Team
+date: 2025/11/06
+
+logsource:
+  category: process_creation
+  product: windows
+
+detection:
+  selection:
+    process_name|endswith: cmd.exe
+    command_line|contains:
+      - whoami
+      - /priv
+      - /groups
+      - /all
+  condition: selection
+
+falsepositives:
+  - Legitimate troubleshooting
+  - Scripts
+
+tags:
+  - attack.discovery
+  - attack.t1033  # System Owner/User Discovery
+  - attack.t1087  # Account Discovery

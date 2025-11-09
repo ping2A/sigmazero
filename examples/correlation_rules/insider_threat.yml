@@ -1,0 +1,27 @@
+title: Insider Threat - Multiple Suspicious Activities
+id: insider-threat-001
+description: Detects same user performing multiple suspicious activities within short timeframe
+status: experimental
+level: high
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal
+  rules:
+    - unauthorized-hr-file-access
+    - sensitive-financial-data-access
+    - usb-device-connection
+    - after-hours-access
+  timespan: 2h
+  condition:
+    gte: 2
+  group-by:
+    - user
+
+tags:
+  - attack.collection
+  - attack.exfiltration
+  - attack.t1074  # Data Staged
+  - attack.t1052  # Exfiltration Over Physical Medium
+  - correlation.insider_threat

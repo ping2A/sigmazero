@@ -1,0 +1,37 @@
+title: Unauthorized HR File Access
+id: unauthorized-hr-file-access
+status: stable
+description: Detects file access to HR directories by unauthorized users
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: file_access
+  product: windows
+
+detection:
+  selection:
+    event_type: file_access
+    action: read
+    file_path|contains:
+      - \HR\
+      - \Human Resources\
+      - \Personnel\
+      - \Employee\
+      - \Payroll\
+  filter_authorized:
+    user|contains:
+      - hr_
+      - admin
+      - payroll_
+  condition: selection and not filter_authorized
+
+falsepositives:
+  - IT administrators
+  - Auditors
+  - New HR staff without proper group membership
+
+tags:
+  - attack.collection
+  - attack.t1005  # Data from Local System

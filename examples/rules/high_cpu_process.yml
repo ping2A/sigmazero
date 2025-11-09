@@ -1,0 +1,33 @@
+title: High CPU Usage Process
+id: high-cpu-process
+status: experimental
+description: Detects processes consuming abnormally high CPU resources
+level: low
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: process_creation
+  product: windows
+
+detection:
+  selection:
+    event_type: process_monitoring
+    cpu_usage_percent|gte: 80
+  filter:
+    process_name|endswith:
+      - chrome.exe
+      - firefox.exe
+      - java.exe
+      - node.exe
+  condition: selection and not filter
+
+falsepositives:
+  - Legitimate high-performance applications
+  - Video rendering
+  - Compilation tasks
+  - Scientific computing
+
+tags:
+  - attack.impact
+  - attack.t1496  # Resource Hijacking

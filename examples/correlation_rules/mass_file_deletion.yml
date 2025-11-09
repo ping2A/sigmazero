@@ -1,0 +1,24 @@
+title: Mass File Deletion or Wiper Attack
+id: mass-deletion-001
+description: Detects mass file deletion indicating wiper malware or destructive attack
+status: stable
+level: critical
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: event_count
+  rules:
+    - file-deletion
+  timespan: 5m
+  condition:
+    gte: 50
+  group-by:
+    - user
+    - host
+
+tags:
+  - attack.impact
+  - attack.t1485  # Data Destruction
+  - attack.t1561  # Disk Wipe
+  - correlation.destructive_attack

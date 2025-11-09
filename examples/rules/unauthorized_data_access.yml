@@ -1,0 +1,42 @@
+title: Unauthorized Data Access
+id: unauthorized-data-access
+status: stable
+description: Detects unauthorized access to sensitive data repositories
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: data_access
+  product: database
+
+detection:
+  selection:
+    event_type: database_access
+    action: select
+    table_name|contains:
+      - users
+      - passwords
+      - credentials
+      - payment
+      - credit_card
+      - ssn
+      - customer
+      - employee
+      - confidential
+  filter_authorized:
+    user|startswith:
+      - app_
+      - service_
+      - admin_
+  condition: selection and not filter_authorized
+
+falsepositives:
+  - Authorized database queries
+  - Application service accounts
+  - Database administrators
+  - Reporting tools
+
+tags:
+  - attack.collection
+  - attack.t1213  # Data from Information Repositories

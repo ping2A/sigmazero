@@ -1,0 +1,30 @@
+title: Successful Login from Unusual Location
+id: successful-login-unusual-location
+status: experimental
+description: Detects successful login from geographically unusual or impossible travel location
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: authentication
+  product: windows
+
+detection:
+  selection:
+    event_type: authentication
+    status: success
+  filter:
+    location_anomaly: true
+  condition: selection and filter
+
+falsepositives:
+  - VPN usage
+  - Travel
+  - Remote work from new locations
+  - Proxy servers
+
+tags:
+  - attack.initial_access
+  - attack.t1078  # Valid Accounts
+  - attack.t1133  # External Remote Services

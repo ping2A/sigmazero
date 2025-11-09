@@ -1,0 +1,57 @@
+[package]
+name = "sigma-zero"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "sigma_zero"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sigma-zero"
+path = "bin/cli.rs"
+
+[[bin]]
+name = "sigma-generate-logs"
+path = "bin/generate_logs.rs"
+
+
+[dependencies]
+# Async runtime for parallel processing
+tokio = { version = "1.40", features = ["full"] }
+# JSON parsing for logs and rules
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+# Regular expressions for pattern matching
+regex = "1.10"
+# Base64 encoding/decoding
+base64 = "0.21"
+# For CLI arguments
+clap = { version = "4.5", features = ["derive"] }
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+# Parallel iteration
+rayon = "1.10"
+# For streaming large files
+futures = "0.3"
+# For IP address parsing
+ipnetwork = "0.20"
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+# For efficient string matching
+aho-corasick = "1.1"
+# For timestamps
+chrono = "0.4"
+# For random generation
+rand = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[dev-dependencies]
+tempfile = "3.8"

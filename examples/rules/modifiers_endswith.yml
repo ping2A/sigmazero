@@ -1,0 +1,20 @@
+title: Executable File Download with EndsWith Modifier
+id: eeff0011-2233-4455-6677-8899aabbccdd
+description: Detects downloads of executable files based on file extension
+status: experimental
+level: medium
+detection:
+  selection:
+    event_type: 'file_download'
+    file_path|endswith:
+      - '.exe'
+      - '.dll'
+      - '.scr'
+      - '.bat'
+      - '.ps1'
+      - '.vbs'
+      - '.hta'
+  condition: selection
+tags:
+  - attack.execution
+  - attack.t1204

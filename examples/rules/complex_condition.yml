@@ -1,0 +1,25 @@
+title: Advanced Threat Detection with Complex Logic
+id: ffff0000-1111-2222-3333-444444444444
+description: Demonstrates complex condition logic with parentheses
+status: experimental
+level: critical
+detection:
+  selection_process:
+    process_name:
+      - '*powershell.exe'
+      - '*cmd.exe'
+  selection_encoded:
+    command_line|contains:
+      - '-enc'
+      - '-encodedcommand'
+  selection_network:
+    destination_domain:
+      - '*malicious.com'
+      - '*evil.net'
+  selection_suspicious_ip:
+    destination_ip:
+      - '10.0.0.*'
+  condition: selection_process and (selection_encoded or (selection_network and selection_suspicious_ip))
+tags:
+  - attack.execution
+  - attack.command_and_control

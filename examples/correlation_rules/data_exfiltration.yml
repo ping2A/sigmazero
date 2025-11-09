@@ -1,0 +1,26 @@
+title: Data Exfiltration Chain
+id: data-exfil-001
+description: Detects data collection, staging, and exfiltration sequence
+status: experimental
+level: high
+author: Security Team
+date: 2025/11/06
+
+correlation:
+  type: temporal_ordered
+  rules:
+    - sensitive-file-access-bulk
+    - data-staging-temp-folder
+    - large-outbound-transfer
+  timespan: 2h
+  group-by:
+    - user
+    - source_ip
+
+tags:
+  - attack.collection
+  - attack.exfiltration
+  - attack.t1074  # Data Staged
+  - attack.t1041  # Exfiltration Over C2 Channel
+  - attack.t1048  # Exfiltration Over Alternative Protocol
+  - correlation.data_theft

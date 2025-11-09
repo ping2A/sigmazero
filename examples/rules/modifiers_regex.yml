@@ -1,0 +1,16 @@
+title: Suspicious IP Pattern Detection with Regex
+id: ffee1122-3344-5566-7788-99aabbccddee
+description: Detects suspicious IP addresses using regex patterns
+status: experimental
+level: high
+detection:
+  selection:
+    event_type: 'network_connection'
+    destination_ip|re:
+      - '^10\.0\.0\.\d+$'
+      - '^192\.168\.1\.(100|101|102)$'
+      - '^203\.0\.113\.\d+$'
+  condition: selection
+tags:
+  - attack.command_and_control
+  - attack.t1071

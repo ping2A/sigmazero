@@ -1,0 +1,32 @@
+title: USB Device Connection
+id: usb-device-connection
+status: stable
+description: Detects connection of USB storage devices which could be used for data exfiltration
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: device_connection
+  product: windows
+
+detection:
+  selection:
+    event_type: device_connection
+    device_type:
+      - usb_storage
+      - removable_media
+      - external_drive
+    action: connected
+  condition: selection
+
+falsepositives:
+  - Authorized use of USB drives
+  - Backup operations
+  - File transfers approved by management
+  - IT support activities
+
+tags:
+  - attack.exfiltration
+  - attack.t1052.001  # Exfiltration over Physical Medium: USB
+  - attack.t1091      # Replication Through Removable Media

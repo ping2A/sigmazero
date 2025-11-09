@@ -1,0 +1,29 @@
+title: APT Multi-Stage Attack Detection
+id: apt-attack-chain-001
+description: Detects advanced persistent threat with credential theft followed by lateral movement
+status: experimental
+level: critical
+author: Security Team
+date: 2025/11/06
+
+# Base rule references
+# These rules must exist and their matches will be correlated
+correlation:
+  type: temporal
+  rules:
+    - credential-dumping-mimikatz        # Credential theft
+    - suspicious-powershell-encoded      # Suspicious execution
+    - psexec-lateral-movement           # Lateral movement
+  timespan: 4h
+  condition:
+    gte: 3
+  group-by:
+    - user
+    - source_ip
+
+tags:
+  - attack.credential_access
+  - attack.lateral_movement
+  - attack.t1003  # Credential Dumping
+  - attack.t1021  # Remote Services
+  - correlation.apt

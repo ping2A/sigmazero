@@ -1,0 +1,13 @@
+title: High Port Number Connection Detection
+id: 22334455-6677-8899-aabb-ccddeeff0011
+description: Detects network connections to ports above 50000
+status: experimental
+level: medium
+detection:
+  selection:
+    event_type: 'network_connection'
+    port|gte: '50000'
+  condition: selection
+tags:
+  - attack.command_and_control
+  - attack.t1571

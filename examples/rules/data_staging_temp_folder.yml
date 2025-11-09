@@ -1,0 +1,38 @@
+title: Data Staging in Temp Folder
+id: data-staging-temp-folder
+status: stable
+description: Detects creation of archives or large files in temporary folders indicating data staging
+level: medium
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: file_creation
+  product: windows
+
+detection:
+  selection:
+    event_type: file_creation
+    file_path|contains:
+      - \Temp\
+      - \AppData\Local\Temp\
+      - \Windows\Temp\
+      - \TMP\
+    file_extension:
+      - .zip
+      - .rar
+      - .7z
+      - .tar
+      - .gz
+  size_filter:
+    size|gte: 10485760  # 10MB or larger
+  condition: selection and size_filter
+
+falsepositives:
+  - Software installations
+  - Update packages
+  - Legitimate file transfers
+
+tags:
+  - attack.collection
+  - attack.t1074.001  # Local Data Staging

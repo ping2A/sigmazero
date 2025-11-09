@@ -1,0 +1,32 @@
+title: Port Scan Detected
+id: port-scan-detected
+status: stable
+description: Detects network port scanning activity indicating reconnaissance
+level: high
+author: Security Team
+date: 2025/11/08
+
+logsource:
+  category: network_connection
+  product: firewall
+
+detection:
+  selection:
+    event_type: network_connection
+    action: connection_attempt
+    status: 
+      - refused
+      - filtered
+      - timeout
+  timeframe: 1m
+  condition: selection | count(destination_port) by source_ip >= 10
+
+falsepositives:
+  - Vulnerability scanners (authorized)
+  - Network monitoring tools
+  - Security assessments
+
+tags:
+  - attack.reconnaissance
+  - attack.t1046  # Network Service Scanning
+  - attack.t1595.001  # Active Scanning: Scanning IP Blocks
