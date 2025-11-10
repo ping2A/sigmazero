@@ -1,0 +1,2 @@
+{"timestamp": "2025-11-10T09:00:00Z", "event_type": "network_connection", "destination_domain": "pool.moneropool.com", "destination_port": "3333", "user": "miner", "host": "srv-app-01"}
+{"timestamp": "2025-11-10T09:02:00Z", "event_type": "process_monitoring", "cpu_usage_percent": 95, "process_name": "xmrig.exe", "user": "miner", "host": "srv-app-01"}

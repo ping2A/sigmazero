@@ -1,0 +1,2 @@
+{"timestamp": "2025-11-10T09:00:00Z", "event_type": "authentication", "status": "failed", "user": "b.smith", "source_ip": "1.2.3.4"}
+{"timestamp": "2025-11-10T09:01:00Z", "event_type": "authentication", "status": "success", "user": "b.smith", "source_ip": "9.8.7.6", "location_anomaly": true}

@@ -1,0 +1,3 @@
+{"timestamp": "2025-11-10T09:00:01Z", "event_type": "file_deletion", "action": "delete", "file_path": "C:\\files\\a.txt", "user": "wiper", "host": "fileserver-01"}
+{"timestamp": "2025-11-10T09:00:02Z", "event_type": "file_deletion", "action": "delete", "file_path": "C:\\files\\b.txt", "user": "wiper", "host": "fileserver-01"}
+{"timestamp": "2025-11-10T09:00:03Z", "event_type": "file_deletion", "action": "delete", "file_path": "C:\\files\\c.txt", "user": "wiper", "host": "fileserver-01"}
