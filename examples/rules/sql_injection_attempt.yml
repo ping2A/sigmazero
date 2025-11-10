@@ -14,19 +14,19 @@ detection:
   selection:
     event_type: web_request
     request_content|contains:
-      - ' OR 1=1
-      - ' OR '1'='1
-      - ' OR 'a'='a
-      - '; DROP TABLE
-      - '; DELETE FROM
-      - ' UNION SELECT
-      - ' AND 1=1
-      - admin'--
-      - admin'#
-      - ' OR ''='
-      - EXEC sp_
-      - EXEC xp_
-      - xp_cmdshell
+      - " OR 1=1"
+      - " OR '1'='1"
+      - " OR 'a'='a"
+      - "; DROP TABLE"
+      - "; DELETE FROM"
+      - " UNION SELECT"
+      - " AND 1=1"
+      - "admin'--"
+      - "admin'#"
+      - " OR ''="
+      - "EXEC sp_"
+      - "EXEC xp_"
+      - "xp_cmdshell"
   condition: selection
 
 falsepositives:

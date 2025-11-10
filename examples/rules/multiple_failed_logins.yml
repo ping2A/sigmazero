@@ -1,8 +1,8 @@
-title: Multiple Failed Login Attempts
-id: multiple-failed-logins
+title: Windows Authentication Failed
+id: windows-auth-failed  # Renamed ID to be more specific
 status: stable
-description: Detects multiple failed authentication attempts indicating possible credential guessing
-level: medium
+description: Detects a single failed authentication attempt on Windows
+level: low # Lowered level, as this is now a base rule for correlation
 author: Security Team
 date: 2025/11/08
 
@@ -14,13 +14,10 @@ detection:
   selection:
     event_type: authentication
     status: failed
-  timeframe: 5m
-  condition: selection | count() >= 5
+  condition: selection
 
 falsepositives:
   - User password typos
-  - Misconfigured applications
-  - Password expiration
 
 tags:
   - attack.credential_access

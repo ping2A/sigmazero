@@ -15,19 +15,19 @@ detection:
     event_type: web_request
   suspicious_uri:
     request_uri|contains:
-      - ../
-      - ..\\
-      - /etc/passwd
-      - /etc/shadow
-      - /windows/win.ini
-      - cmd.exe
-      - powershell.exe
-      - <script>
-      - javascript:
-      - onerror=
-      - onload=
-      - eval(
-      - base64,
+      - "../"
+      - "..\\"
+      - "/etc/passwd"
+      - "/etc/shadow"
+      - "/windows/win.ini"
+      - "cmd.exe"
+      - "powershell.exe"
+      - "<script>"
+      - "javascript:"
+      - "onerror="
+      - "onload="
+      - "eval("
+      - "base64,"
   suspicious_method:
     request_method:
       - PUT

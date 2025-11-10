@@ -9,7 +9,7 @@ date: 2025/11/06
 correlation:
   type: temporal_ordered
   rules:
-    - multiple-failed-logins
+    - windows-auth-failed
     - successful-login-unusual-location
   timespan: 1h
   group-by:

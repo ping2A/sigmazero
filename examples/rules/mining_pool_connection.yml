@@ -24,12 +24,12 @@ detection:
       - f2pool
       - antpool
     destination_port:
-      - 3333
-      - 4444
-      - 5555
-      - 7777
-      - 8888
-      - 9999
+      - '3333'
+      - '4444'
+      - '5555'
+      - '7777'
+      - '8888'
+      - '9999'
   condition: selection
 
 falsepositives:

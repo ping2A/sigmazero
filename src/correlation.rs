@@ -248,6 +248,7 @@ impl CorrelationEngine {
 
         // Check correlation type
         println!("      Checking correlation type {:?} {:?}", correlation.condition_type, filtered_matches.len());
+
         let condition_met = match correlation.condition_type {
             CorrelationType::All => {
                 // All referenced rules must have at least one match
@@ -267,17 +268,10 @@ impl CorrelationEngine {
                     .filter_map(|m| m.rule_id.as_ref())
                     .collect();
 
-                n >= matched_rule_ids.len()
-            }
-            CorrelationType::Count(n) => {
-                // Exactly N different rules must match
-                let matched_rule_ids: std::collections::HashSet<_> = filtered_matches
-                    .iter()
-                    .filter_map(|m| m.rule_id.as_ref())
-                    .collect();
+                matched_rule_ids.len() >= n
 
-                println!("COUNT {:?} {:?}", n, matched_rule_ids.len());
-                
+            }
+            CorrelationType::Count(n) => {               
                 filtered_matches.len() >= n
             }
             CorrelationType::Sequence => {
@@ -302,24 +296,37 @@ impl CorrelationEngine {
 
     /// Check if matches occur in the specified sequence
     fn check_sequence(&self, matches: &[&RuleMatch], sequence: &[String]) -> bool {
+        println!("      Checking sequence {:?} {:?}", sequence, matches.len());
+       
         if sequence.is_empty() {
             return false;
         }
 
         // Sort matches by timestamp
         let mut sorted_matches = matches.to_vec();
-        sorted_matches.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+        //sorted_matches.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+        sorted_matches.sort_by(|a, b| {
+            let a_ts = a.matched_log.get_field("timestamp").unwrap_or_default();
+            let b_ts = b.matched_log.get_field("timestamp").unwrap_or_default();
+            a_ts.cmp(&b_ts)
+        });
 
         // Track which sequence position we're looking for
         let mut sequence_idx = 0;
 
+        println!("Sorted_matches {:?} {:?}", sorted_matches, sorted_matches.len());
+
         for rule_match in sorted_matches {
+            println!("Rule match {:?} {:?}", rule_match.rule_id, sequence_idx);
+
             if let Some(ref rule_id) = rule_match.rule_id {
                 if sequence_idx < sequence.len() && rule_id == &sequence[sequence_idx] {
                     sequence_idx += 1;
                 }
             }
         }
+
+        println!("Sequence IDX {:?} {:?}", sequence_idx, sequence.len());
 
         // All sequence elements must be found
         sequence_idx == sequence.len()
