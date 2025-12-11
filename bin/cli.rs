@@ -1,13 +1,11 @@
 use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
-use std::sync::Arc;
 use tracing::{info, warn};
 use tracing_subscriber;
 
 
 use sigma_zero::engine::SigmaEngine;
-use sigma_zero::models::LogEntry;
 use sigma_zero::correlation::CorrelationEngine;
 use sigma_zero::correlation_parser::load_correlation_rules;
 

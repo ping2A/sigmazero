@@ -168,6 +168,68 @@ impl SigmaEngine {
         Ok(matches)
     }
 
+        /// Evaluate a single log entry against all rules (for streaming/real-time processing)
+    pub fn evaluate_log_entry(&self, log: &LogEntry) -> Vec<RuleMatch> {
+        let matches: Vec<RuleMatch> = self.rules
+            .iter()
+            .filter_map(|rule| self.evaluate_rule(rule, log))
+            .collect();
+
+        // Record matches in correlation engine if enabled
+        if let Some(ref correlation_engine) = self.correlation_engine {
+            for rule_match in &matches {
+                correlation_engine.record_match(rule_match.clone());
+            }
+        }
+
+        matches
+    }
+
+    /// Evaluate a batch of log entries against all rules
+    pub fn evaluate_log_batch(&self, logs: &[LogEntry]) -> Vec<RuleMatch> {
+        let matches: Vec<RuleMatch> = logs
+            .par_iter()
+            .flat_map(|log| {
+                self.rules
+                    .iter()
+                    .filter_map(|rule| self.evaluate_rule(rule, log))
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        if let Some(ref correlation_engine) = self.correlation_engine {
+            for rule_match in &matches {
+                correlation_engine.record_match(rule_match.clone());
+            }
+        }
+
+        matches
+    }
+
+    /// Evaluate a stream of log entries with a callback for each match
+    pub fn evaluate_log_stream<F>(&self, logs: &[LogEntry], mut callback: F)
+    where
+        F: FnMut(&RuleMatch),
+    {
+        for log in logs {
+            let matches = self.evaluate_log_entry(log);
+            for rule_match in matches {
+                callback(&rule_match);
+            }
+        }
+    }
+
+    /// Parse a JSON log line and evaluate it (convenience method)
+    pub fn evaluate_log_line(&self, log_line: &str) -> Option<Vec<RuleMatch>> {
+        match serde_json::from_str::<LogEntry>(log_line) {
+            Ok(log) => Some(self.evaluate_log_entry(&log)),
+            Err(e) => {
+                debug!("Failed to parse log line: {}", e);
+                None
+            }
+        }
+    }
+
     /// Check for correlation matches
     pub fn check_correlations(&self) -> Vec<CorrelationMatch> {
         if let Some(ref correlation_engine) = self.correlation_engine {

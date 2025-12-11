@@ -12,6 +12,10 @@ name = "sigma-zero"
 path = "bin/cli.rs"
 
 [[bin]]
+name = "sigma-zero-streaming"
+path = "bin/cli_streaming.rs"
+
+[[bin]]
 name = "sigma-generate-logs"
 path = "bin/generate_logs.rs"
 

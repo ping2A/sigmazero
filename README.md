@@ -247,6 +247,6 @@ Matches are output in JSON format:
 
 ## About
 
-This project has been mainly generated with the help of Claude.ai during an Amsterdam trip, but it seems to work correctly and can handle many cases without the need of a full SIEM for the evaluation of small rules !
+This project has been mainly generated with the help of [Claude.ai](https://claude.ai) during an Amsterdam trip, but it seems to work correctly and can handle many cases without the need of a full SIEM for the evaluation of small rules !
 You can see it like a micro SIEM for local evaluation of your logs or if you would like to evaluate specific logs for edge cases !
 

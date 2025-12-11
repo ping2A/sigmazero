@@ -609,4 +609,91 @@ mod tests {
         let log3 = create_log(vec![("a", json!("1"))]);
         assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
     }
+  #[test]
+    fn test_evaluate_single_log_entry() {
+        let mut engine = SigmaEngine::new(Some(1));
+        engine.rules.push(create_test_rule());
+
+        // Matching log
+        let log_match = create_test_log(vec![
+            ("process_name", json!("powershell.exe")),
+        ]);
+        let matches = engine.evaluate_log_entry(&log_match);
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].rule_title, "Test Rule");
+
+        // Non-matching log
+        let log_no_match = create_test_log(vec![
+            ("process_name", json!("notepad.exe")),
+        ]);
+        let matches = engine.evaluate_log_entry(&log_no_match);
+        assert_eq!(matches.len(), 0);
+    }
+
+    #[test]
+    fn test_evaluate_log_batch() {
+        let mut engine = SigmaEngine::new(Some(2));
+        engine.rules.push(create_test_rule());
+
+        let logs = vec![
+            create_test_log(vec![("process_name", json!("powershell.exe"))]),
+            create_test_log(vec![("process_name", json!("notepad.exe"))]),
+            create_test_log(vec![("process_name", json!("powershell.exe"))]),
+        ];
+
+        let matches = engine.evaluate_log_batch(&logs);
+        assert_eq!(matches.len(), 2); // Two PowerShell matches
+    }
+
+    #[test]
+    fn test_evaluate_log_stream_with_callback() {
+        let mut engine = SigmaEngine::new(Some(1));
+        engine.rules.push(create_test_rule());
+
+        let logs = vec![
+            create_test_log(vec![("process_name", json!("powershell.exe"))]),
+            create_test_log(vec![("process_name", json!("cmd.exe"))]),
+            create_test_log(vec![("process_name", json!("powershell.exe"))]),
+        ];
+
+        let mut match_count = 0;
+        engine.evaluate_log_stream(&logs, |_| {
+            match_count += 1;
+        });
+
+        assert_eq!(match_count, 2);
+    }
+
+    #[test]
+    fn test_evaluate_log_line() {
+        let mut engine = SigmaEngine::new(Some(1));
+        engine.rules.push(create_test_rule());
+
+        // Valid JSON
+        let log_line = r#"{"process_name":"powershell.exe","command_line":"test"}"#;
+        let result = engine.evaluate_log_line(log_line);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().len(), 1);
+
+        // Invalid JSON
+        let invalid_line = r#"not valid json"#;
+        let result = engine.evaluate_log_line(invalid_line);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_streaming_with_correlation() {
+        let mut engine = SigmaEngine::new_with_correlation(Some(1), 100);
+        engine.rules.push(create_test_rule());
+
+        let log = create_test_log(vec![("process_name", json!("powershell.exe"))]);
+        let matches = engine.evaluate_log_entry(&log);
+
+        assert_eq!(matches.len(), 1);
+        
+        // Check that match was recorded in correlation engine
+        if let Some(corr_engine) = engine.correlation_engine() {
+            assert_eq!(corr_engine.history_size(), 1);
+        }
+    }
 }
