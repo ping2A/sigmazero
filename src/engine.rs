@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+#[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -24,13 +25,16 @@ impl SigmaEngine {
     pub fn new(workers: Option<usize>) -> Self {
         let workers = workers.unwrap_or_else(get_num_cpus);
         
-        // Configure rayon thread pool
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(workers)
-            .build_global()
-            .unwrap_or_else(|e| {
-                eprintln!("Warning: Failed to set thread pool size: {}", e);
-            });
+        // Configure rayon thread pool (native only)
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build_global()
+                .unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to set thread pool size: {}", e);
+                });
+        }
 
         Self {
             rules: Vec::new(),
@@ -43,12 +47,15 @@ impl SigmaEngine {
     pub fn new_with_correlation(workers: Option<usize>, max_history_size: usize) -> Self {
         let workers = workers.unwrap_or_else(get_num_cpus);
         
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(workers)
-            .build_global()
-            .unwrap_or_else(|e| {
-                eprintln!("Warning: Failed to set thread pool size: {}", e);
-            });
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(workers)
+                .build_global()
+                .unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to set thread pool size: {}", e);
+                });
+        }
 
         Self {
             rules: Vec::new(),
@@ -71,7 +78,8 @@ impl SigmaEngine {
         self.correlation_engine.as_ref().map(|arc| arc.as_ref())
     }
 
-    /// Load Sigma rules from a directory or a file (#yolo)
+    /// Load Sigma rules from a directory or a file (native only)
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn load_rules(&mut self, rules_dir: &Path) -> Result<usize> {
         if rules_dir.is_dir() {
             info!("Loading rules from directory: {:?}", rules_dir);
@@ -89,7 +97,16 @@ impl SigmaEngine {
         }
     }
 
-    /// Evaluate logs against all loaded rules
+    /// Load rules from string (works on both WASM and native)
+    pub fn load_rules_from_string(&mut self, yaml_content: &str) -> Result<usize> {
+        let rules: Vec<SigmaRule> = serde_yaml::from_str(yaml_content)?;
+        let count = rules.len();
+        self.rules = rules.into_iter().map(Arc::new).collect();
+        Ok(count)
+    }
+
+    /// Evaluate logs against all loaded rules (native only - requires file I/O)
+    #[cfg(not(target_arch = "wasm32"))]
     pub async fn evaluate_logs(&self, logs_path: &Path) -> Result<Vec<RuleMatch>> {
         if !logs_path.exists() {
             anyhow::bail!("Logs path does not exist: {:?}", logs_path);
@@ -120,7 +137,8 @@ impl SigmaEngine {
         Ok(all_matches)
     }
 
-    /// Process a single log file
+    /// Process a single log file (native only)
+    #[cfg(not(target_arch = "wasm32"))]
     fn process_log_file(&self, file_path: &Path) -> Result<Vec<RuleMatch>> {
         info!("Reading log file: {:?}", file_path);
         
@@ -168,7 +186,7 @@ impl SigmaEngine {
         Ok(matches)
     }
 
-        /// Evaluate a single log entry against all rules (for streaming/real-time processing)
+    /// Evaluate a single log entry against all rules (for streaming/real-time processing)
     pub fn evaluate_log_entry(&self, log: &LogEntry) -> Vec<RuleMatch> {
         let matches: Vec<RuleMatch> = self.rules
             .iter()
@@ -185,17 +203,33 @@ impl SigmaEngine {
         matches
     }
 
-    /// Evaluate a batch of log entries against all rules
+    /// Evaluate a batch of log entries against all rules (with conditional parallelization)
     pub fn evaluate_log_batch(&self, logs: &[LogEntry]) -> Vec<RuleMatch> {
-        let matches: Vec<RuleMatch> = logs
-            .par_iter()
-            .flat_map(|log| {
-                self.rules
-                    .iter()
-                    .filter_map(|rule| self.evaluate_rule(rule, log))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        #[cfg(not(target_arch = "wasm32"))]
+        let matches: Vec<RuleMatch> = {
+            logs
+                .par_iter()
+                .flat_map(|log| {
+                    self.rules
+                        .iter()
+                        .filter_map(|rule| self.evaluate_rule(rule, log))
+                        .collect::<Vec<_>>()
+                })
+                .collect()
+        };
+
+        #[cfg(target_arch = "wasm32")]
+        let matches: Vec<RuleMatch> = {
+            logs
+                .iter()
+                .flat_map(|log| {
+                    self.rules
+                        .iter()
+                        .filter_map(|rule| self.evaluate_rule(rule, log))
+                        .collect::<Vec<_>>()
+                })
+                .collect()
+        };
 
         if let Some(ref correlation_engine) = self.correlation_engine {
             for rule_match in &matches {
@@ -250,7 +284,7 @@ impl SigmaEngine {
                 rule_title: rule.title.clone(),
                 level: rule.level.clone(),
                 matched_log: log.clone(),
-                timestamp: chrono::Utc::now().to_rfc3339(),
+                timestamp: current_timestamp(),
             })
         } else {
             None
@@ -551,9 +585,29 @@ impl SigmaEngine {
 
 // Helper function to get number of CPUs
 fn get_num_cpus() -> usize {
-    std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4)
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+    }
+    
+    #[cfg(target_arch = "wasm32")]
+    {
+        1 // WASM is single-threaded
+    }
+}
+
+// Helper function to get current timestamp
+#[cfg(not(target_arch = "wasm32"))]
+fn current_timestamp() -> String {
+    chrono::Utc::now().to_rfc3339()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn current_timestamp() -> String {
+    // WASM doesn't have access to system time easily
+    "wasm-timestamp".to_string()
 }
 
 // Helper function to find operator position outside of parentheses

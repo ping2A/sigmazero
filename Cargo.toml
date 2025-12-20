@@ -6,6 +6,7 @@ edition = "2021"
 [lib]
 name = "sigma_zero"
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "sigma-zero"
@@ -19,10 +20,7 @@ path = "bin/cli_streaming.rs"
 name = "sigma-generate-logs"
 path = "bin/generate_logs.rs"
 
-
 [dependencies]
-# Async runtime for parallel processing
-tokio = { version = "1.40", features = ["full"] }
 # JSON parsing for logs and rules
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -31,13 +29,11 @@ serde_yaml = "0.9"
 regex = "1.10"
 # Base64 encoding/decoding
 base64 = "0.21"
-# For CLI arguments
-clap = { version = "4.5", features = ["derive"] }
+
 # Error handling
 anyhow = "1.0"
 thiserror = "1.0"
-# Parallel iteration
-rayon = "1.10"
+
 # For streaming large files
 futures = "0.3"
 # For IP address parsing
@@ -51,6 +47,17 @@ aho-corasick = "1.1"
 chrono = "0.4"
 # For random generation
 rand = "0.8"
+
+# Async runtime for parallel processing
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.40", features = ["full"] }
+rayon = { version = "1.10" }
+clap = { version = "4.5", features = ["derive"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { version = "1", default-features = false, features = ["sync", "macros"] }
+getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen = "0.2"
 
 [profile.release]
 opt-level = 3
