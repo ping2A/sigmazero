@@ -1040,7 +1040,7 @@ mod tests {
         assert!(result.is_some());
         
         let match_result = result.unwrap();
-        assert_eq!(match_result.rule_title, "Integration Test Rule");
+        assert_eq!(match_result.rule_title, "Test Rule");
         assert_eq!(match_result.level, Some("medium".to_string()));
     }
 

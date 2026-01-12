@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tracing::{debug, info};
 
 use crate::models::{
-    ConditionMap, FieldValue, LogEntry, RuleMatch, SelectionValue, SigmaRule,
+    ConditionMap, FieldValue, LogEntry, RuleMatch, SelectionValue, SigmaRule, FieldModifier
 };
 use crate::parser;
 use crate::correlation::{CorrelationEngine, CorrelationMatch};
@@ -319,24 +319,49 @@ impl SigmaEngine {
             return !self.parse_and_evaluate_expression(inner, rule, log);
         }
         
-        // Handle parentheses
+        // Handle parentheses - only strip if they are matching outer parentheses
         if expr.starts_with('(') && expr.ends_with(')') {
-            let inner = &expr[1..expr.len()-1];
-            return self.parse_and_evaluate_expression(inner, rule, log);
+            // Check if the opening '(' at position 0 matches the closing ')' at the end
+            // This means depth should never become 0 until the very last character
+            let mut depth = 0;
+            let chars: Vec<char> = expr.chars().collect();
+            let mut valid_outer_parens = true;
+            
+            for (i, &ch) in chars.iter().enumerate() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        // If depth becomes 0 before the last character, the opening '(' at position 0
+                        // doesn't match with the closing ')' at the end
+                        if depth == 0 && i < chars.len() - 1 {
+                            valid_outer_parens = false;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            
+            // Only strip if outer parens are valid and balanced
+            if valid_outer_parens && depth == 0 {
+                let inner = &expr[1..expr.len()-1];
+                return self.parse_and_evaluate_expression(inner, rule, log);
+            }
         }
         
         // Split by OR (lower precedence)
         if let Some(or_pos) = find_operator(expr, " or ") {
-            let left = &expr[..or_pos];
-            let right = &expr[or_pos + 4..];
+            let left = expr[..or_pos].trim();
+            let right = expr[or_pos + 4..].trim();
             return self.parse_and_evaluate_expression(left, rule, log) 
                 || self.parse_and_evaluate_expression(right, rule, log);
         }
         
         // Split by AND (higher precedence)
         if let Some(and_pos) = find_operator(expr, " and ") {
-            let left = &expr[..and_pos];
-            let right = &expr[and_pos + 5..];
+            let left = expr[..and_pos].trim();
+            let right = expr[and_pos + 5..].trim();
             return self.parse_and_evaluate_expression(left, rule, log) 
                 && self.parse_and_evaluate_expression(right, rule, log);
         }
@@ -354,14 +379,28 @@ impl SigmaEngine {
         }
         
         let count_spec = parts[0];
-        let pattern = if parts.len() > 3 { parts[3] } else { "*" };
+        // Pattern is either parts[2] (for "1 of selection_*") or default to "*"
+        let pattern = parts.get(2).unwrap_or(&"*");
         
         // Get matching selections
         let matching_selections: Vec<_> = rule.detection.selections.keys()
             .filter(|key| {
-                *key != "condition" && *key != "timeframe" && 
-                (pattern == "*" || pattern == "them" || 
-                 key.starts_with(&pattern.trim_end_matches('*')))
+                // Skip condition and timeframe
+                if *key == "condition" || *key == "timeframe" {
+                    return false;
+                }
+                
+                // Match based on pattern
+                if *pattern == "*" || *pattern == "them" {
+                    true
+                } else if pattern.ends_with('*') {
+                    // Wildcard pattern: match prefix
+                    let prefix = pattern.trim_end_matches('*');
+                    key.starts_with(prefix)
+                } else {
+                    // Exact match
+                    *key == *pattern
+                }
             })
             .collect();
         
@@ -423,8 +462,6 @@ impl SigmaEngine {
 
     /// Evaluate a single field condition
     fn evaluate_field_condition(&self, field: &str, value: &FieldValue, log: &LogEntry) -> bool {
-        use crate::models::{LogEntry as _, FieldModifier};
-        
         // Parse field name and modifiers
         let (base_field, modifiers) = LogEntry::parse_field_modifiers(field);
         
@@ -506,10 +543,11 @@ impl SigmaEngine {
                         .all(|part| field_lower.contains(&part.to_lowercase()))
                 }
                 FieldModifier::Base64 | FieldModifier::Base64Offset => {
-                    // Decode base64 encoded search term
-                    if let Ok(decoded) = base64::decode(value) {
+                    // Decode base64 encoded field content and search in it
+                    use base64::{Engine as _, engine::general_purpose};
+                    if let Ok(decoded) = general_purpose::STANDARD.decode(field_value.as_bytes()) {
                         if let Ok(decoded_str) = String::from_utf8(decoded) {
-                            field_lower.contains(&decoded_str.to_lowercase())
+                            decoded_str.to_lowercase().contains(&value_lower)
                         } else {
                             false
                         }
@@ -615,21 +653,26 @@ fn find_operator(expr: &str, op: &str) -> Option<usize> {
     let mut depth = 0;
     let expr_lower = expr.to_lowercase();
     let op_lower = op.to_lowercase();
-    let chars: Vec<char> = expr.chars().collect();
+    let expr_bytes = expr_lower.as_bytes();
     
-    for i in 0..chars.len() {
-        match chars[i] {
-            '(' => depth += 1,
-            ')' => depth -= 1,
+    let mut i = 0;
+    while i < expr_bytes.len() {
+        // Track parentheses depth (using ASCII byte values)
+        match expr_bytes[i] {
+            b'(' => depth += 1,
+            b')' => depth -= 1,
             _ => {}
         }
         
-        if depth == 0 && i + op.len() <= expr.len() {
-            let substr = &expr_lower[i..std::cmp::min(i + op.len(), expr.len())];
-            if substr == op_lower {
+        // Only look for operators at depth 0 (outside any parentheses)
+        if depth == 0 && i + op.len() <= expr_lower.len() {
+            // Check if we have the operator at this position
+            if &expr_lower[i..i + op.len()] == op_lower.as_str() {
                 return Some(i);
             }
         }
+        
+        i += 1;
     }
     
     None

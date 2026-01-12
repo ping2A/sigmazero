@@ -152,9 +152,16 @@ impl LogEntry {
                     }
                 }
                 FieldModifier::All => {
-                    // All modifier means all items in array must match
-                    // This is handled at a higher level
-                    continue;
+                    // All modifier: split by whitespace and check all parts are present
+                    let parts: Vec<&str> = value.split_whitespace().collect();
+                    if parts.is_empty() {
+                        continue;
+                    }
+                    for part in parts {
+                        if !field_lower.contains(&part.to_lowercase()) {
+                            return false;
+                        }
+                    }
                 }
                 FieldModifier::Re => {
                     if !self.match_regex(&field_value, value) {

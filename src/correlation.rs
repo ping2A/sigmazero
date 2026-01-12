@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use chrono::{DateTime, Utc, Duration};
-use serde::{Serialize, Deserialize};
-use crate::models::{RuleMatch, LogEntry};
+use serde::Serialize;
+use crate::models::RuleMatch;
 
 /// Represents a correlation rule that depends on other rules
 #[derive(Debug, Clone)]
@@ -295,9 +295,7 @@ impl CorrelationEngine {
     }
 
     /// Check if matches occur in the specified sequence
-    fn check_sequence(&self, matches: &[&RuleMatch], sequence: &[String]) -> bool {
-        println!("      Checking sequence {:?} {:?}", sequence, matches.len());
-       
+    fn check_sequence(&self, matches: &[&RuleMatch], sequence: &[String]) -> bool {       
         if sequence.is_empty() {
             return false;
         }
@@ -314,19 +312,13 @@ impl CorrelationEngine {
         // Track which sequence position we're looking for
         let mut sequence_idx = 0;
 
-        println!("Sorted_matches {:?} {:?}", sorted_matches, sorted_matches.len());
-
         for rule_match in sorted_matches {
-            println!("Rule match {:?} {:?}", rule_match.rule_id, sequence_idx);
-
             if let Some(ref rule_id) = rule_match.rule_id {
                 if sequence_idx < sequence.len() && rule_id == &sequence[sequence_idx] {
                     sequence_idx += 1;
                 }
             }
         }
-
-        println!("Sequence IDX {:?} {:?}", sequence_idx, sequence.len());
 
         // All sequence elements must be found
         sequence_idx == sequence.len()
@@ -425,6 +417,7 @@ impl CorrelationRuleBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::LogEntry;
     use std::collections::HashMap;
     use serde_json::json;
 
