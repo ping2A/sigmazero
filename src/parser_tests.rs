@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::parser::*;
     use std::fs;
     use std::io::Write;
     use tempfile::TempDir;
+    use std::path::Path;
 
     fn create_test_rule_file(dir: &TempDir, filename: &str, content: &str) -> std::path::PathBuf {
         let file_path = dir.path().join(filename);

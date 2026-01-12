@@ -5,3 +5,8 @@ pub mod models;
 pub mod parser;
 pub mod correlation;
 pub mod correlation_parser;
+
+#[cfg(test)]
+mod engine_tests;
+mod models_tests;
+mod parser_tests;

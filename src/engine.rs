@@ -15,9 +15,9 @@ use crate::correlation::{CorrelationEngine, CorrelationMatch};
 
 /// The main Sigma rule evaluation engine
 pub struct SigmaEngine {
-    rules: Vec<Arc<SigmaRule>>,
-    workers: usize,
-    correlation_engine: Option<Arc<CorrelationEngine>>,
+    pub rules: Vec<Arc<SigmaRule>>,
+    pub workers: usize,
+    pub correlation_engine: Option<Arc<CorrelationEngine>>,
 }
 
 impl SigmaEngine {
@@ -274,7 +274,7 @@ impl SigmaEngine {
     }
 
     /// Evaluate a single rule against a log entry
-    fn evaluate_rule(&self, rule: &SigmaRule, log: &LogEntry) -> Option<RuleMatch> {
+    pub fn evaluate_rule(&self, rule: &SigmaRule, log: &LogEntry) -> Option<RuleMatch> {
         // Evaluate the condition expression
         let is_match = self.evaluate_condition_expression(&rule.detection.condition, rule, log);
 

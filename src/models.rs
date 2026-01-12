@@ -299,7 +299,7 @@ impl LogEntry {
     }
 
     /// Simple wildcard matching (* matches any characters)
-    fn wildcard_match(&self, text: &str, pattern: &str) -> bool {
+    pub fn wildcard_match(&self, text: &str, pattern: &str) -> bool {
         let parts: Vec<&str> = pattern.split('*').collect();
         
         if parts.is_empty() {

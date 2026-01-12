@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::models::*;
     use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn test_log_entry_get_field() {
