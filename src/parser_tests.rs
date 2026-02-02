@@ -442,4 +442,69 @@ level: medium
         let rule = result.unwrap();
         assert_eq!(rule.detection.condition, "1 of sel*");
     }
+
+    #[test]
+    fn test_filter_rules() {
+        use crate::models::SigmaRule;
+        let rules = vec![
+            {
+                let mut r = SigmaRule {
+                    title: "High".to_string(),
+                    id: Some("id-high".to_string()),
+                    description: None,
+                    status: None,
+                    level: Some("high".to_string()),
+                    detection: crate::models::Detection {
+                        selections: std::collections::HashMap::new(),
+                        condition: "selection".to_string(),
+                        timeframe: None,
+                    },
+                    tags: vec!["attack.execution".to_string()],
+                };
+                r.detection.selections.insert(
+                    "selection".to_string(),
+                    crate::models::SelectionValue::Single(crate::models::ConditionMap {
+                        conditions: std::collections::HashMap::new(),
+                    }),
+                );
+                r
+            },
+            {
+                let mut r = SigmaRule {
+                    title: "Low".to_string(),
+                    id: Some("id-low".to_string()),
+                    description: None,
+                    status: None,
+                    level: Some("low".to_string()),
+                    detection: crate::models::Detection {
+                        selections: std::collections::HashMap::new(),
+                        condition: "selection".to_string(),
+                        timeframe: None,
+                    },
+                    tags: vec!["attack.t1059".to_string()],
+                };
+                r.detection.selections.insert(
+                    "selection".to_string(),
+                    crate::models::SelectionValue::Single(crate::models::ConditionMap {
+                        conditions: std::collections::HashMap::new(),
+                    }),
+                );
+                r
+            },
+        ];
+        let filtered = filter_rules(
+            rules.clone(),
+            &["attack.execution".to_string()],
+            &[],
+            &[],
+        );
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].title, "High");
+        let filtered = filter_rules(rules.clone(), &[], &["high".to_string()], &[]);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].level.as_deref(), Some("high"));
+        let filtered = filter_rules(rules, &[], &[], &["id-low".to_string()]);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id.as_deref(), Some("id-low"));
+    }
 }

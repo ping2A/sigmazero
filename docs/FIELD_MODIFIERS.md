@@ -435,7 +435,32 @@ tags:
 
 Enable verbose logging to see matching details:
 ```bash
-sigma-evaluator -r ./rules -l ./logs -v
+sigma-zero -r ./rules -l ./logs -v
+```
+
+## Field Mapping (Log Mapping)
+
+When rule field names differ from log field names (e.g. Sigma/Windows use `CommandLine`, `ProcessName`, while your logs use `command_line`, `process_name`), use **field mapping** so the evaluator looks up the correct log keys.
+
+**CLI:**
+```bash
+sigma-zero -r ./rules -l ./logs --field-map CommandLine:command_line,ProcessName:process_name
+```
+
+Multiple mappings can be given as comma-separated pairs or by repeating the option:
+```bash
+sigma-zero -r ./rules -l ./logs --field-map CommandLine:command_line --field-map ProcessName:process_name
+```
+
+**Behaviour:**
+- Each mapping is `rule_field_name:log_field_name`.
+- When evaluating a condition on a field (e.g. `CommandLine|contains`), the engine resolves the field via the map: if `CommandLine` is mapped to `command_line`, the log is queried for `command_line`.
+- Unmapped fields are used as-is (rule field name = log field name).
+- Mapping applies to all rules in the run; it is global for the evaluation.
+
+**Example:** A rule uses `TargetFilename|endswith: '.exe'` but your logs have `target_path`. Use:
+```bash
+sigma-zero -r ./rules -l ./logs --field-map TargetFilename:target_path
 ```
 
 ## Future Modifiers (Planned)
@@ -463,8 +488,10 @@ sigma-evaluator -r ./rules -l ./logs -v
 | `base64` | Decode first | Encoded command detection |
 | `lt/lte/gt/gte` | Numeric compare | Port/size thresholds |
 
+**Field mapping** (CLI `--field-map`) is not a modifier but maps rule field names to log field names so rules written for one schema work against another.
+
 ---
 
-**Updated:** November 2025  
+**Updated:** January 2026  
 **Version:** 0.2.0  
 **Status:** Active Development

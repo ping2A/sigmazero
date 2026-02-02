@@ -55,14 +55,14 @@ mod tests {
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("powershell.exe -enc ABC123")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Test non-matching log (missing command_line pattern)
         let log_no_match = create_log(vec![
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("powershell.exe -help")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -85,15 +85,15 @@ mod tests {
         
         // Test with first selection
         let log1 = create_log(vec![("process_name", json!("powershell.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Test with second selection
         let log2 = create_log(vec![("process_name", json!("cmd.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Test with neither
         let log3 = create_log(vec![("process_name", json!("notepad.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -119,14 +119,14 @@ mod tests {
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("C:\\Users\\test\\powershell.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Test not matching (powershell in System32 - filtered out)
         let log_no_match = create_log(vec![
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("C:\\Windows\\System32\\powershell.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -157,21 +157,21 @@ mod tests {
             ("field1", json!("a")),
             ("field2", json!("b")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Should match: sel1=true, sel2=false, sel3=true
         let log2 = create_log(vec![
             ("field1", json!("a")),
             ("field3", json!("c")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match: sel1=false
         let log3 = create_log(vec![
             ("field2", json!("b")),
             ("field3", json!("c")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -198,14 +198,14 @@ mod tests {
         
         // Should match with any one selection
         let log1 = create_log(vec![("field1", json!("value1"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         let log2 = create_log(vec![("field2", json!("value2"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match with none
         let log3 = create_log(vec![("field4", json!("value4"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -231,11 +231,11 @@ mod tests {
             ("field1", json!("value1")),
             ("field2", json!("value2")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match with only one
         let log_no_match = create_log(vec![("field1", json!("value1"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -262,15 +262,15 @@ mod tests {
         
         // Should match selection_a
         let log1 = create_log(vec![("field1", json!("value1"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Should match selection_b
         let log2 = create_log(vec![("field2", json!("value2"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match filter_c (doesn't match pattern)
         let log3 = create_log(vec![("field3", json!("other"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -369,15 +369,15 @@ mod tests {
         
         // Test greater than
         let log_match = create_log(vec![("size", json!(2000))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Test equal (should not match gt)
         let log_equal = create_log(vec![("size", json!(1000))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_equal).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_equal.clone())).is_none());
         
         // Test less than
         let log_less = create_log(vec![("size", json!(500))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_less).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_less.clone())).is_none());
     }
 
     #[test]
@@ -394,15 +394,15 @@ mod tests {
         
         // Test greater than
         let log_greater = create_log(vec![("size", json!(2000))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_greater).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_greater.clone())).is_some());
         
         // Test equal (should match gte)
         let log_equal = create_log(vec![("size", json!(1000))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_equal).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_equal.clone())).is_some());
         
         // Test less than
         let log_less = create_log(vec![("size", json!(500))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_less).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_less.clone())).is_none());
     }
 
     #[test]
@@ -419,15 +419,15 @@ mod tests {
         
         // Test less than
         let log_match = create_log(vec![("port", json!(80))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Test equal (should not match lt)
         let log_equal = create_log(vec![("port", json!(1024))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_equal).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_equal.clone())).is_none());
         
         // Test greater than
         let log_greater = create_log(vec![("port", json!(8080))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_greater).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_greater.clone())).is_none());
     }
 
     #[test]
@@ -444,14 +444,14 @@ mod tests {
         
         // Test with missing field (should match)
         let log_match = create_log(vec![("process", json!("test.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Test with existing field (should not match)
         let log_no_match = create_log(vec![
             ("process", json!("test.exe")),
             ("user", json!("admin")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -472,15 +472,15 @@ mod tests {
         
         // Test matching first value
         let log1 = create_log(vec![("process_name", json!("powershell.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Test matching second value
         let log2 = create_log(vec![("process_name", json!("cmd.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Test not matching
         let log3 = create_log(vec![("process_name", json!("notepad.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -512,15 +512,15 @@ mod tests {
         
         // Should match: s1=true, s3=true
         let log1 = create_log(vec![("a", json!("1")), ("c", json!("3"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Should match: s2=true, s4=true
         let log2 = create_log(vec![("b", json!("2")), ("d", json!("4"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match: s1=true, but no s3 or s4
         let log3 = create_log(vec![("a", json!("1"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -553,13 +553,13 @@ mod tests {
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("powershell.exe -enc ABC")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Missing one condition
         let log_no_match = create_log(vec![
             ("process_name", json!("powershell.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -599,15 +599,15 @@ mod tests {
         
         // Should match with s1 and s2
         let log1 = create_log(vec![("a", json!("1")), ("b", json!("2"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         // Should match with just s3 (due to OR)
         let log2 = create_log(vec![("c", json!("3"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match with only s1
         let log3 = create_log(vec![("a", json!("1"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -619,7 +619,7 @@ mod tests {
         cond.insert("process_name".to_string(), FieldValue::String("powershell.exe".to_string()));
         selections.insert("selection".to_string(), SelectionValue::Single(ConditionMap { conditions: cond }));
         
-        engine.rules.push(std::sync::Arc::new(create_rule(selections, "selection")));
+        engine.rules.push((std::sync::Arc::new(create_rule(selections, "selection")), None, None));
 
         // Matching log
         let log_match = create_log(vec![
@@ -646,7 +646,7 @@ mod tests {
         cond.insert("process_name".to_string(), FieldValue::String("powershell.exe".to_string()));
         selections.insert("selection".to_string(), SelectionValue::Single(ConditionMap { conditions: cond }));
         
-        engine.rules.push(std::sync::Arc::new(create_rule(selections, "selection")));
+        engine.rules.push((std::sync::Arc::new(create_rule(selections, "selection")), None, None));
 
         let logs = vec![
             create_log(vec![("process_name", json!("powershell.exe"))]),
@@ -667,7 +667,7 @@ mod tests {
         cond.insert("process_name".to_string(), FieldValue::String("powershell.exe".to_string()));
         selections.insert("selection".to_string(), SelectionValue::Single(ConditionMap { conditions: cond }));
         
-        engine.rules.push(std::sync::Arc::new(create_rule(selections, "selection")));
+        engine.rules.push((std::sync::Arc::new(create_rule(selections, "selection")), None, None));
 
         let logs = vec![
             create_log(vec![("process_name", json!("powershell.exe"))]),
@@ -692,7 +692,7 @@ mod tests {
         cond.insert("process_name".to_string(), FieldValue::String("powershell.exe".to_string()));
         selections.insert("selection".to_string(), SelectionValue::Single(ConditionMap { conditions: cond }));
         
-        engine.rules.push(std::sync::Arc::new(create_rule(selections, "selection")));
+        engine.rules.push((std::sync::Arc::new(create_rule(selections, "selection")), None, None));
 
         // Valid JSON
         let log_line = r#"{"process_name":"powershell.exe","command_line":"test"}"#;
@@ -715,7 +715,7 @@ mod tests {
         cond.insert("process_name".to_string(), FieldValue::String("powershell.exe".to_string()));
         selections.insert("selection".to_string(), SelectionValue::Single(ConditionMap { conditions: cond }));
         
-        engine.rules.push(std::sync::Arc::new(create_rule(selections, "selection")));
+        engine.rules.push((std::sync::Arc::new(create_rule(selections, "selection")), None, None));
 
         let log = create_log(vec![("process_name", json!("powershell.exe"))]);
         let matches = engine.evaluate_log_entry(&log);
@@ -751,25 +751,25 @@ mod tests {
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("powershell.exe -enc ABC")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_both).is_some(), "FAIL: Both conditions should match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_both.clone())).is_some(), "FAIL: Both conditions should match");
         
         println!("Test 2: Only first condition matches");
         let log_first = create_log(vec![
             ("process_name", json!("powershell.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_first).is_none(), "FAIL: Only first condition, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_first.clone())).is_none(), "FAIL: Only first condition, should not match");
         
         println!("Test 3: Only second condition matches");
         let log_second = create_log(vec![
             ("command_line", json!("cmd.exe -enc test")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_second).is_none(), "FAIL: Only second condition, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_second.clone())).is_none(), "FAIL: Only second condition, should not match");
         
         println!("Test 4: Neither condition matches");
         let log_neither = create_log(vec![
             ("other_field", json!("value")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_neither).is_none(), "FAIL: Neither condition, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_neither.clone())).is_none(), "FAIL: Neither condition, should not match");
         
         println!("✓ Basic AND two conditions test passed");
     }
@@ -802,14 +802,14 @@ mod tests {
             ("b", json!("2")),
             ("c", json!("3")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_all).is_some(), "FAIL: All three should match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_all.clone())).is_some(), "FAIL: All three should match");
         
         println!("Test 2: Only two conditions match");
         let log_two = create_log(vec![
             ("a", json!("1")),
             ("b", json!("2")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_two).is_none(), "FAIL: Only two conditions, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_two.clone())).is_none(), "FAIL: Only two conditions, should not match");
         
         println!("✓ AND three conditions test passed");
     }
@@ -848,7 +848,7 @@ mod tests {
             ("c", json!("3")),
             ("d", json!("4")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_all).is_some(), "FAIL: All four should match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_all.clone())).is_some(), "FAIL: All four should match");
         
         println!("Test 2: Missing from first group");
         let log_missing1 = create_log(vec![
@@ -856,7 +856,7 @@ mod tests {
             ("c", json!("3")),
             ("d", json!("4")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_missing1).is_none(), "FAIL: Missing from first group");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_missing1.clone())).is_none(), "FAIL: Missing from first group");
         
         println!("Test 3: Missing from second group");
         let log_missing2 = create_log(vec![
@@ -864,7 +864,7 @@ mod tests {
             ("b", json!("2")),
             ("c", json!("3")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_missing2).is_none(), "FAIL: Missing from second group");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_missing2.clone())).is_none(), "FAIL: Missing from second group");
         
         println!("✓ Nested AND with parentheses test passed");
     }
@@ -890,11 +890,11 @@ mod tests {
         
         println!("Test 1: First value");
         let log1 = create_log(vec![("process_name", json!("powershell.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log1).is_none(), "FAIL: Should not match (impossible condition)");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log1.clone())).is_none(), "FAIL: Should not match (impossible condition)");
         
         println!("Test 2: Second value");
         let log2 = create_log(vec![("process_name", json!("cmd.exe"))]);
-        assert!(engine.evaluate_rule(&rule_arc, &log2).is_none(), "FAIL: Should not match (impossible condition)");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log2.clone())).is_none(), "FAIL: Should not match (impossible condition)");
         
         println!("✓ Impossible AND condition test passed");
     }
@@ -927,7 +927,7 @@ mod tests {
             ("command_line", json!("powershell -enc ABC")),
             ("user", json!("john")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_match).is_some(), "FAIL: Should match (not SYSTEM)");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_match.clone())).is_some(), "FAIL: Should match (not SYSTEM)");
         
         println!("Test 2: Match s1 and s2, but is SYSTEM");
         let log_system = create_log(vec![
@@ -935,7 +935,7 @@ mod tests {
             ("command_line", json!("powershell -enc ABC")),
             ("user", json!("SYSTEM")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_system).is_none(), "FAIL: Should not match (is SYSTEM)");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_system.clone())).is_none(), "FAIL: Should not match (is SYSTEM)");
         
         println!("✓ AND with NOT test passed");
     }
@@ -968,19 +968,19 @@ mod tests {
             ("a", json!("1")),
             ("b", json!("2")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_and).is_some(), "FAIL: (s1 and s2) should match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_and.clone())).is_some(), "FAIL: (s1 and s2) should match");
         
         println!("Test 2: Only s3 matches (should match due to OR)");
         let log_or = create_log(vec![
             ("c", json!("3")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_or).is_some(), "FAIL: s3 should match via OR");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_or.clone())).is_some(), "FAIL: s3 should match via OR");
         
         println!("Test 3: Only s1 matches (should not match)");
         let log_only_s1 = create_log(vec![
             ("a", json!("1")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_only_s1).is_none(), "FAIL: Only s1, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_only_s1.clone())).is_none(), "FAIL: Only s1, should not match");
         
         println!("✓ AND operator precedence with OR test passed");
     }
@@ -1008,14 +1008,14 @@ mod tests {
             ("command_line", json!("powershell -enc ABC")),
             ("user", json!("admin")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_all).is_some(), "FAIL: All conditions should match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_all.clone())).is_some(), "FAIL: All conditions should match");
         
         println!("Test 2: Missing one condition");
         let log_missing = create_log(vec![
             ("process_name", json!("powershell.exe")),
             ("command_line", json!("powershell -enc ABC")),
         ]);
-        assert!(engine.evaluate_rule(&rule_arc, &log_missing).is_none(), "FAIL: Missing user, should not match");
+        assert!(engine.evaluate_rule(&rule_arc, None, None, &std::sync::Arc::new(log_missing.clone())).is_none(), "FAIL: Missing user, should not match");
         
         println!("✓ AND within selection test passed");
     }
@@ -1036,7 +1036,7 @@ mod tests {
         let log = create_log(vec![("process_name", json!("powershell.exe"))]);
         
         // Evaluate
-        let result = engine.evaluate_rule(&rule, &log);
+        let result = engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log.clone()));
         assert!(result.is_some());
         
         let match_result = result.unwrap();
@@ -1072,7 +1072,7 @@ mod tests {
             ("command_line", json!("powershell -enc ABC")),
             ("user", json!("john")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: SYSTEM user (filtered out)
         let log_no_match = create_log(vec![
@@ -1080,7 +1080,7 @@ mod tests {
             ("command_line", json!("powershell -enc ABC")),
             ("user", json!("SYSTEM")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1106,14 +1106,14 @@ mod tests {
         
         // Should match with any one indicator
         let log1 = create_log(vec![("indicator1", json!("malicious1"))]);
-        assert!(engine.evaluate_rule(&rule, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         let log2 = create_log(vec![("indicator2", json!("malicious2"))]);
-        assert!(engine.evaluate_rule(&rule, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         // Should NOT match with no indicators
         let log3 = create_log(vec![("other", json!("value"))]);
-        assert!(engine.evaluate_rule(&rule, &log3).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log3.clone())).is_none());
     }
 
     #[test]
@@ -1131,13 +1131,13 @@ mod tests {
         let log_match = create_log(vec![
             ("command_line", json!("powershell.exe -enc ABC")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: doesn't start with powershell
         let log_no_match = create_log(vec![
             ("command_line", json!("C:\\Windows\\powershell.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1153,11 +1153,11 @@ mod tests {
         
         // Should match: size >= 1000000
         let log_match = create_log(vec![("size", json!(2000000))]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: size < 1000000
         let log_no_match = create_log(vec![("size", json!(500000))]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1177,17 +1177,17 @@ mod tests {
         
         // Should match any of the array values
         let log1 = create_log(vec![("process_name", json!("powershell.exe"))]);
-        assert!(engine.evaluate_rule(&rule, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         let log2 = create_log(vec![("process_name", json!("cmd.exe"))]);
-        assert!(engine.evaluate_rule(&rule, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log2.clone())).is_some());
         
         let log3 = create_log(vec![("process_name", json!("wscript.exe"))]);
-        assert!(engine.evaluate_rule(&rule, &log3).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log3.clone())).is_some());
         
         // Should NOT match other values
         let log4 = create_log(vec![("process_name", json!("notepad.exe"))]);
-        assert!(engine.evaluate_rule(&rule, &log4).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log4.clone())).is_none());
     }
 
     #[test]
@@ -1203,14 +1203,14 @@ mod tests {
         
         // Should match: user field is missing
         let log_match = create_log(vec![("process", json!("test.exe"))]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: user field exists
         let log_no_match = create_log(vec![
             ("process", json!("test.exe")),
             ("user", json!("admin")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1228,13 +1228,13 @@ mod tests {
         let log_match = create_log(vec![
             ("file_path", json!("C:\\Users\\Test\\AppData\\Local\\Temp\\malware.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: wrong path
         let log_no_match = create_log(vec![
             ("file_path", json!("C:\\Windows\\System32\\notepad.exe")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1259,11 +1259,11 @@ mod tests {
             ("field1", json!("value1")),
             ("field2", json!("value2")),
         ]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
         
         // Should NOT match: only one selection
         let log_no_match = create_log(vec![("field1", json!("value1"))]);
-        assert!(engine.evaluate_rule(&rule, &log_no_match).is_none());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_no_match.clone())).is_none());
     }
 
     #[test]
@@ -1278,14 +1278,14 @@ mod tests {
         
         let rule = std::sync::Arc::new(create_rule(selections, "selection"));
         
-        // Create multiple logs
-        let logs: Vec<_> = (0..100)
+        // Create multiple logs (kept for potential future batch assertion)
+        let _logs: Vec<_> = (0..100)
             .map(|i| create_log(vec![("test", json!(format!("value{}", i)))]))
             .collect();
         
         // Only the first log should match
         let log_match = create_log(vec![("test", json!("value"))]);
-        assert!(engine.evaluate_rule(&rule, &log_match).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log_match.clone())).is_some());
     }
 
     #[test]
@@ -1301,9 +1301,9 @@ mod tests {
         
         // Should match regardless of case
         let log1 = create_log(vec![("process", json!("PowerShell.EXE"))]);
-        assert!(engine.evaluate_rule(&rule, &log1).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log1.clone())).is_some());
         
         let log2 = create_log(vec![("process", json!("POWERSHELL.EXE"))]);
-        assert!(engine.evaluate_rule(&rule, &log2).is_some());
+        assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log2.clone())).is_some());
     }
 }

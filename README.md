@@ -53,13 +53,20 @@ sigma-zero --rules-dir ./examples/rules --logs ./examples/logs
 
 ```
 Options:
-  -r, --rules-dir <RULES_DIR>  Path to directory containing Sigma rules (YAML files)
-  -l, --logs <LOGS>           Path to log file or directory containing log files (JSON format)
-  -w, --workers <WORKERS>      Number of parallel workers (defaults to number of CPU cores)
-  -o, --output <OUTPUT>        Output file for matches (defaults to stdout)
-  -v, --verbose               Enable verbose logging
-  -h, --help                  Print help
-  -V, --version               Print version
+  -r, --rules-dir <RULES_DIR>     Path to directory containing Sigma rules (YAML files)
+  -l, --logs <LOGS>               Path to log file or directory containing log files (JSON format)
+  -c, --correlation-rules <DIR>   Path to directory containing correlation rules (optional)
+  -w, --workers <WORKERS>         Number of parallel workers (defaults to number of CPU cores)
+  -o, --output <OUTPUT>           Output file for matches (defaults to stdout)
+  -f, --format <FORMAT>           Output format: json, jsonl, or text [default: text]
+      --validate                  Validate rules only (parse and exit; no log evaluation)
+      --filter-tag <TAG>          Filter rules by tag (can be repeated)
+      --filter-level <LEVEL>      Filter rules by level (can be repeated)
+      --filter-id <ID>            Filter rules by id (can be repeated)
+      --field-map <MAP>           Field mapping rule_field:log_field (e.g. CommandLine:command_line). Comma-separated or repeated
+  -v, --verbose                   Enable verbose logging
+  -h, --help                      Print help
+  -V, --version                   Print version
 ```
 
 ### Examples
@@ -74,6 +81,27 @@ sigma-zero -r ./rules -l ./logs/security.json
 sigma-zero -r ./rules -l ./logs -w 8
 ```
 
+**Output as JSON or JSONL:**
+```bash
+sigma-zero -r ./rules -l ./logs -f json -o matches.json
+sigma-zero -r ./rules -l ./logs -f jsonl
+```
+
+**Validate rules only (no log evaluation):**
+```bash
+sigma-zero -r ./rules --validate
+```
+
+**Filter rules by tag or level:**
+```bash
+sigma-zero -r ./rules -l ./logs --filter-tag attack.execution --filter-level high
+```
+
+**Map rule field names to log field names (e.g. Windows rule fields to your log schema):**
+```bash
+sigma-zero -r ./rules -l ./logs --field-map CommandLine:command_line,ProcessName:process_name
+```
+
 **Save results to a file:**
 ```bash
 sigma-zero -r ./rules -l ./logs -o matches.json
@@ -83,6 +111,24 @@ sigma-zero -r ./rules -l ./logs -o matches.json
 ```bash
 sigma-zero -r ./rules -l ./logs -v
 ```
+
+### Streaming mode
+
+For real-time or pipe-based evaluation, use **sigma-zero-streaming**. It reads JSON logs from stdin and evaluates them as they arrive:
+
+```bash
+tail -f /var/log/app.json | sigma-zero-streaming -r ./rules
+journalctl -f -o json | sigma-zero-streaming -r ./rules
+```
+
+**Streaming options:**
+- `-r, --rules-dir` – Path to Sigma rules
+- `-c, --correlation-rules` – Optional correlation rules directory
+- `-b, --batch-size <N>` – Process logs in batches of N (default: 1 for real-time)
+- `-f, --output-format <json|text|silent>` – Output format (default: text)
+- `-m, --min-level <LEVEL>` – Only output matches at or above this level (low, medium, high, critical)
+
+**Throughput:** Use a larger batch size (e.g. `-b 100`) to trade latency for higher throughput when reading from a pipe or file.
 
 ## Log Format
 
@@ -142,6 +188,7 @@ tags:
   - Parentheses `()` for grouping
   - `1 of them`, `all of them` - Pattern-based selection
   - `1 of selection_*` - Wildcard selection matching
+  - **Threshold/count conditions**: `selection_name | count > 5` or `| count >= N` – rule fires when the number of logs matching the selection (in the current batch) satisfies the threshold. Evaluated only in batch mode (file or `evaluate_log_batch`).
 
 📖 **See [CONDITION_OPERATORS.md](docs/CONDITION_OPERATORS.md) for complete documentation on all operators and modifiers.**
 - **Multiple values**: Arrays of values for OR logic
@@ -176,8 +223,6 @@ The project includes 4 realistic security log files (170 total events):
 
 **Attack Coverage**: All 12 MITRE ATT&CK tactics represented  
 **Use Cases**: Development, testing, training, incident response simulation
-
-See [LOG_FILES.md](LOG_FILES.md) for detailed descriptions of each log file and expected rule matches.
 
 ## Performance Considerations
 

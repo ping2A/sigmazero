@@ -434,7 +434,7 @@ mod tests {
             rule_id: Some(rule_id),
             rule_title,
             level: Some("medium".to_string()),
-            matched_log: log,
+            matched_log: std::sync::Arc::new(log),
             timestamp: Utc::now().to_rfc3339(),
         }
     }

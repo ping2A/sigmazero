@@ -15,6 +15,39 @@ pub fn parse_sigma_rule(path: &Path) -> Result<SigmaRule> {
     Ok(rule)
 }
 
+/// Filter rules by tag, level, or id. Each non-empty filter must match (AND).
+/// Empty filter list means no filter for that dimension.
+pub fn filter_rules(
+    rules: Vec<SigmaRule>,
+    tags: &[String],
+    levels: &[String],
+    ids: &[String],
+) -> Vec<SigmaRule> {
+    if tags.is_empty() && levels.is_empty() && ids.is_empty() {
+        return rules;
+    }
+    rules
+        .into_iter()
+        .filter(|rule| {
+            let tag_ok = tags.is_empty()
+                || rule.tags.iter().any(|t| tags.iter().any(|f| t.eq_ignore_ascii_case(f)));
+            let level_ok = levels.is_empty()
+                || rule
+                    .level
+                    .as_ref()
+                    .map(|l| levels.iter().any(|f| l.eq_ignore_ascii_case(f)))
+                    .unwrap_or(false);
+            let id_ok = ids.is_empty()
+                || rule
+                    .id
+                    .as_ref()
+                    .map(|i| ids.iter().any(|f| i.eq_ignore_ascii_case(f)))
+                    .unwrap_or(false);
+            tag_ok && level_ok && id_ok
+        })
+        .collect()
+}
+
 /// Load all Sigma rules from a directory
 pub fn load_rules_from_directory(dir_path: &Path) -> Result<Vec<SigmaRule>> {
     let mut rules = Vec::new();

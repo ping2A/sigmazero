@@ -5,10 +5,11 @@ This document describes the advanced condition operators supported by the Sigma 
 ## Table of Contents
 1. [Boolean Operators](#boolean-operators)
 2. [Pattern Matching](#pattern-matching)
-3. [Field Modifiers](#field-modifiers)
-4. [Numeric Comparisons](#numeric-comparisons)
-5. [Null Handling](#null-handling)
-6. [Examples](#examples)
+3. [Threshold / Count Conditions](#threshold--count-conditions)
+4. [Field Modifiers](#field-modifiers)
+5. [Numeric Comparisons](#numeric-comparisons)
+6. [Null Handling](#null-handling)
+7. [Examples](#examples)
 
 ## Boolean Operators
 
@@ -167,6 +168,38 @@ detection:
 ```
 
 Requires at least 2 of the 3 selections to match.
+
+## Threshold / Count Conditions
+
+Rules can fire when the **number of log entries** matching a selection (in the current batch) satisfies a threshold. This is useful for detecting “N+ failed logins”, “more than 5 errors from same host”, etc.
+
+**Syntax:**
+```yaml
+condition: selection_name | count > N
+condition: selection_name | count >= N
+condition: selection_name | count < N
+condition: selection_name | count <= N
+condition: selection_name | count == N
+```
+
+**Example – multiple failed logins:**
+```yaml
+title: Multiple Failed SSH Logins
+detection:
+  failed_login:
+    event_type: 'ssh_failed'
+    user: '*'
+  condition: failed_login | count > 5
+```
+
+The rule triggers when, in the **current batch** of logs (e.g. one file or one `evaluate_log_batch` call), more than 5 entries match the `failed_login` selection.
+
+**Behaviour:**
+- **Batch-only:** Threshold/count is evaluated only when processing a batch of logs (e.g. `sigma-zero -r ./rules -l ./logs` or `evaluate_log_batch`). It is **not** evaluated per log in streaming mode (`sigma-zero-streaming` or `evaluate_log_entry`).
+- **Operators:** `>`, `>=`, `<`, `<=`, `==` with a non-negative integer threshold.
+- **Output:** When the condition is satisfied, one match is emitted per matching log entry (each with the same rule metadata).
+
+**CLI:** Use file or directory input so the engine runs in batch mode; count conditions are then applied over that batch.
 
 ## Field Modifiers
 
@@ -520,6 +553,7 @@ condition: a and (b or c)
 ✅ Parentheses for grouping
 ✅ "1 of them" / "all of them" patterns
 ✅ "1 of selection_*" patterns
+✅ **Threshold / count conditions** (`selection_name | count > N`, `>=`, `<`, `<=`, `==`) in batch mode
 ✅ Field modifiers (contains, startswith, endswith, all, re, etc.)
 ✅ Numeric comparisons (gt, gte, lt, lte)
 ✅ Null checks
@@ -527,14 +561,13 @@ condition: a and (b or c)
 ### Not Yet Implemented
 ❌ Time-based aggregations (e.g., "within 5m")
 ❌ Cross-field comparisons
-❌ Advanced count operations beyond basic "1 of" / "2 of"
-❌ Correlation across multiple log entries
+❌ Correlation across multiple log entries (use correlation rules for multi-event patterns)
 
 ## Testing Your Rules
 
 Use the verbose flag to debug rule matching:
 ```bash
-sigma-evaluator -r ./rules -l ./logs -v
+sigma-zero -r ./rules -l ./logs -v
 ```
 
 This will show which selections matched and why.

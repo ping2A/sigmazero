@@ -278,7 +278,7 @@ mod tests {
             rule_id: Some("test".to_string()),
             rule_title: "Test".to_string(),
             level: Some("high".to_string()),
-            matched_log: LogEntry { fields: std::collections::HashMap::new() },
+            matched_log: std::sync::Arc::new(LogEntry { fields: std::collections::HashMap::new() }),
             timestamp: "2025-01-01T00:00:00Z".to_string(),
         };
         
@@ -291,7 +291,7 @@ mod tests {
             rule_id: Some("test".to_string()),
             rule_title: "Test".to_string(),
             level: Some("high".to_string()),
-            matched_log: LogEntry { fields: std::collections::HashMap::new() },
+            matched_log: std::sync::Arc::new(LogEntry { fields: std::collections::HashMap::new() }),
             timestamp: "2025-01-01T00:00:00Z".to_string(),
         };
         
@@ -299,7 +299,7 @@ mod tests {
             rule_id: Some("test".to_string()),
             rule_title: "Test".to_string(),
             level: Some("low".to_string()),
-            matched_log: LogEntry { fields: std::collections::HashMap::new() },
+            matched_log: std::sync::Arc::new(LogEntry { fields: std::collections::HashMap::new() }),
             timestamp: "2025-01-01T00:00:00Z".to_string(),
         };
         

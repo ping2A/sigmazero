@@ -827,7 +827,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("═══════════════════════════════════════════");
     println!();
     println!("Usage example:");
-    println!("  sigma-evaluator -r examples/rules -l {}", args.output);
+    println!("  sigma-zero -r examples/rules -l {}", args.output);
     println!();
 
     Ok(())

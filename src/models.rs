@@ -353,6 +353,16 @@ pub struct RuleMatch {
     pub rule_id: Option<String>,
     pub rule_title: String,
     pub level: Option<String>,
-    pub matched_log: LogEntry,
+    /// Shared reference to the matched log (avoids cloning full log per match)
+    #[serde(serialize_with = "serialize_arc_log_entry")]
+    pub matched_log: std::sync::Arc<LogEntry>,
     pub timestamp: String,
+}
+
+fn serialize_arc_log_entry<S>(arc: &std::sync::Arc<LogEntry>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    use serde::Serialize;
+    arc.as_ref().serialize(s)
 }
