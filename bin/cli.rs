@@ -13,9 +13,9 @@ use sigma_zero::parser::{self, filter_rules};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Path to directory containing Sigma rules (YAML files)
+    /// Path to directory or file of Sigma rules (optional if logs use only `_sigma_injected_rule` / `_sigma_injected_rules` per line)
     #[arg(short, long)]
-    rules_dir: PathBuf,
+    rules_dir: Option<PathBuf>,
 
     /// Path to log file or directory containing log files (JSON format)
     #[arg(short, long)]
@@ -74,7 +74,11 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt().with_max_level(log_level).init();
 
     info!("Starting Sigma Zero Rule Evaluator");
-    info!("Rules directory: {:?}", args.rules_dir);
+    if let Some(ref p) = args.rules_dir {
+        info!("Rules path: {:?}", p);
+    } else {
+        info!("No --rules-dir: global rule set is empty; use per-line _sigma_injected_rule for tests");
+    }
 
     // Parse field mapping from --field-map
     let field_map = parse_field_map(&args.field_map)?;
@@ -88,23 +92,27 @@ async fn main() -> Result<()> {
     }
 
     // Load rules (with optional filtering)
-    let rules_loaded = if args.filter_tag.is_empty()
-        && args.filter_level.is_empty()
-        && args.filter_id.is_empty()
-    {
-        engine.load_rules(&args.rules_dir)?
+    let rules_loaded: usize = if let Some(ref rules_path) = args.rules_dir {
+        if args.filter_tag.is_empty()
+            && args.filter_level.is_empty()
+            && args.filter_id.is_empty()
+        {
+            engine.load_rules(rules_path)?
+        } else {
+            let rules = parser::load_rules_from_directory(rules_path)?;
+            let filtered = filter_rules(
+                rules,
+                &args.filter_tag,
+                &args.filter_level,
+                &args.filter_id,
+            );
+            info!("Filtered to {} rules", filtered.len());
+            engine.load_rules_from_rules(filtered)?
+        }
     } else {
-        let rules = parser::load_rules_from_directory(&args.rules_dir)?;
-        let filtered = filter_rules(
-            rules,
-            &args.filter_tag,
-            &args.filter_level,
-            &args.filter_id,
-        );
-        info!("Filtered to {} rules", filtered.len());
-        engine.load_rules_from_rules(filtered)?
+        0
     };
-    info!("Loaded {} Sigma rules", rules_loaded);
+    info!("Loaded {} Sigma rules (global engine)", rules_loaded);
 
     // Validate-only mode: exit after loading rules
     if args.validate {

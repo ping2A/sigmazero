@@ -1,0 +1,3 @@
+{"_sigma_injected_rule": "title: my-test\ndetection:\n  selection:\n    command_line|re: '.*-enc\\s+ABC'\n  condition: selection\n", "command_line": "powershell.exe -enc ABC", "process_name": "powershell.exe"}
+{"_sigma_injected_rule": "title: my-test-2\ndetection:\n  selection:\n    command_line|re: '.*-enc\\s+ABC'\n  condition: selection\n", "command_line": "notepad.exe", "process_name": "notepad.exe"}
+{"message": "normal line without injection, needs global rules from -r if you want matches"}

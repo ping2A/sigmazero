@@ -3,6 +3,7 @@
 pub mod engine;
 pub mod models;
 pub mod parser;
+pub mod injected_log;
 pub mod correlation;
 pub mod correlation_parser;
 

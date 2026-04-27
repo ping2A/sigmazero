@@ -1306,4 +1306,69 @@ mod tests {
         let log2 = create_log(vec![("process", json!("POWERSHELL.EXE"))]);
         assert!(engine.evaluate_rule(&rule, None, None, &std::sync::Arc::new(log2.clone())).is_some());
     }
+
+    /// Real end-to-end test: a JSONL file on disk with `_sigma_injected_rule` YAML on each
+    /// embedded line, zero global rules — must parse, strip injection keys, and return one match.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn test_evaluate_jsonl_file_with_embedded_sigma_rules() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+        use crate::injected_log::INJECTED_RULE;
+
+        let engine = SigmaEngine::new(Some(1));
+
+        // Realistic Sigma rule: tradecraft-style (Invoke-Expression in process command line)
+        let rule_yaml = r#"title: powershell-invoke-expression-embedded-test
+id: e2e-embed-001
+level: high
+description: Realistic embedded rule for integration test
+detection:
+  selection:
+    command_line|contains: "Invoke-Expression"
+  condition: selection
+"#;
+        let line1 = serde_json::json!({
+            INJECTED_RULE: rule_yaml,
+            "command_line": "powershell.exe -NoP -c \"Invoke-Expression (Get-Content .\\run.ps1)\"",
+            "process_name": "powershell.exe"
+        });
+        // Same rule, benign command line — should not match
+        let line2 = serde_json::json!({
+            INJECTED_RULE: rule_yaml,
+            "command_line": "C:\\\\Windows\\\\notepad.exe C:\\\\log.txt",
+            "process_name": "notepad.exe"
+        });
+        // No injection: global engine has 0 rules → no match from this line
+        let line3 = r#"{"event_id":1,"message":"legit event without embed"}"#;
+
+        let mut f = NamedTempFile::new().unwrap();
+        writeln!(f, "{}", line1).unwrap();
+        writeln!(f, "{}", line2).unwrap();
+        writeln!(f, "{}", line3).unwrap();
+        f.flush().unwrap();
+
+        let matches = engine
+            .evaluate_logs(f.path())
+            .await
+            .expect("evaluate_logs on temp jsonl with embedded rules");
+
+        assert_eq!(
+            matches.len(),
+            1,
+            "only the Invoke-Expression line should match; line2 no match, line3 no global rules"
+        );
+        assert_eq!(matches[0].rule_title, "powershell-invoke-expression-embedded-test");
+        assert_eq!(matches[0].rule_id.as_deref(), Some("e2e-embed-001"));
+        assert!(
+            !matches[0].matched_log.fields.contains_key("_sigma_injected_rule"),
+            "injection key must be stripped from matched log"
+        );
+        let cl = matches[0].matched_log.get_field("command_line").expect("command_line");
+        assert!(
+            cl.contains("Invoke-Expression"),
+            "matched log should be the event fields only: {}",
+            cl
+        );
+    }
 }

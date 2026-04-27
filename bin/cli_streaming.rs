@@ -17,15 +17,16 @@ use tracing::{info, warn, error};
 use tracing_subscriber;
 
 use sigma_zero::engine::SigmaEngine;
+use sigma_zero::injected_log::{parse_json_log_line, PreparedLogLine, INJECTED_RULE, INJECTED_RULES};
 use sigma_zero::models::{LogEntry, RuleMatch};
 use sigma_zero::correlation_parser::load_correlation_rules;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Real-time Sigma rule evaluator", long_about = None)]
 struct Args {
-    /// Path to directory containing Sigma rules (YAML files)
+    /// Path to directory or file of Sigma rules (optional if stdin lines embed `_sigma_injected_rule`)
     #[arg(short, long)]
-    rules_dir: PathBuf,
+    rules_dir: Option<PathBuf>,
 
     /// Path to directory containing correlation rules (optional)
     #[arg(short = 'c', long)]
@@ -67,7 +68,11 @@ fn main() -> Result<()> {
         .init();
 
     info!("Starting Sigma Zero Streaming Processor");
-    info!("Rules directory: {:?}", args.rules_dir);
+    if let Some(ref p) = args.rules_dir {
+        info!("Rules path: {:?}", p);
+    } else {
+        info!("No --rules-dir: only embedded rules in lines");
+    }
 
     // Initialize engine
     let mut engine = if args.correlation_rules.is_some() {
@@ -77,9 +82,13 @@ fn main() -> Result<()> {
     };
 
     // Load rules
-    info!("Loading Sigma rules...");
-    let rules_loaded = engine.load_rules(&args.rules_dir)?;
-    info!("Loaded {} Sigma rules", rules_loaded);
+    let rules_loaded = if let Some(ref p) = args.rules_dir {
+        info!("Loading Sigma rules...");
+        engine.load_rules(p)?
+    } else {
+        0
+    };
+    info!("Loaded {} global Sigma rules", rules_loaded);
 
     // Load correlation rules if specified
     if let Some(correlation_dir) = &args.correlation_rules {
@@ -126,37 +135,69 @@ fn process_stdin_stream(engine: &SigmaEngine, args: &Args) -> Result<()> {
 
         line_count += 1;
 
-        // Parse log entry
-        let log_entry: LogEntry = match serde_json::from_str(&line) {
-            Ok(entry) => entry,
+        // Parse: optional embedded test rules, then `LogEntry`
+        let prep = match parse_json_log_line(&line) {
+            Ok(p) => p,
             Err(e) => {
-                warn!("Failed to parse log line {}: {}", line_count, e);
-                continue;
+                if !line.contains(INJECTED_RULE) && !line.contains(INJECTED_RULES) {
+                    if let Ok(entry) = serde_json::from_str::<LogEntry>(&line) {
+                        PreparedLogLine::Standard(entry)
+                    } else {
+                        warn!("Failed to parse log line {}: {}", line_count, e);
+                        continue;
+                    }
+                } else {
+                    warn!("Failed to parse line {} with embedded rules: {}", line_count, e);
+                    continue;
+                }
             }
         };
 
-        if args.batch_size == 1 {
-            // Real-time mode: process immediately
-            let matches = engine.evaluate_log_entry(&log_entry);
-            for rule_match in matches {
-                if should_output_match(&rule_match, &args.min_level) {
-                    output_match(&rule_match, &args.output_format);
-                    match_count += 1;
+        match prep {
+            PreparedLogLine::Injected { rules, log } => {
+                if !batch.is_empty() {
+                    let matches = engine.evaluate_log_batch(&batch);
+                    for rule_match in matches {
+                        if should_output_match(&rule_match, &args.min_level) {
+                            output_match(&rule_match, &args.output_format);
+                            match_count += 1;
+                        }
+                    }
+                    batch.clear();
+                }
+                if let Ok(matches) = engine.evaluate_log_entry_with_injected_rules(&log, rules) {
+                    for rule_match in matches {
+                        if should_output_match(&rule_match, &args.min_level) {
+                            output_match(&rule_match, &args.output_format);
+                            match_count += 1;
+                        }
+                    }
+                } else {
+                    error!("Failed to evaluate embedded rules at line {}", line_count);
                 }
             }
-        } else {
-            // Batch mode: accumulate and process in batches
-            batch.push(log_entry);
-            
-            if batch.len() >= args.batch_size {
-                let matches = engine.evaluate_log_batch(&batch);
-                for rule_match in matches {
-                    if should_output_match(&rule_match, &args.min_level) {
-                        output_match(&rule_match, &args.output_format);
-                        match_count += 1;
+            PreparedLogLine::Standard(log_entry) => {
+                if args.batch_size == 1 {
+                    let matches = engine.evaluate_log_entry(&log_entry);
+                    for rule_match in matches {
+                        if should_output_match(&rule_match, &args.min_level) {
+                            output_match(&rule_match, &args.output_format);
+                            match_count += 1;
+                        }
+                    }
+                } else {
+                    batch.push(log_entry);
+                    if batch.len() >= args.batch_size {
+                        let matches = engine.evaluate_log_batch(&batch);
+                        for rule_match in matches {
+                            if should_output_match(&rule_match, &args.min_level) {
+                                output_match(&rule_match, &args.output_format);
+                                match_count += 1;
+                            }
+                        }
+                        batch.clear();
                     }
                 }
-                batch.clear();
             }
         }
 

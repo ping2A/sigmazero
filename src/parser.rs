@@ -8,11 +8,12 @@ use crate::models::SigmaRule;
 pub fn parse_sigma_rule(path: &Path) -> Result<SigmaRule> {
     let content = fs::read_to_string(path)
         .with_context(|| format!("Failed to read rule file: {:?}", path))?;
-    
-    let rule: SigmaRule = serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse YAML in file: {:?}", path))?;
-    
-    Ok(rule)
+    parse_sigma_rule_str(&content).with_context(|| format!("Failed to parse YAML in file: {:?}", path))
+}
+
+/// Parse a Sigma rule from a YAML string (e.g. log-embedded test rules)
+pub fn parse_sigma_rule_str(content: &str) -> Result<SigmaRule> {
+    serde_yaml::from_str(content).context("Failed to parse Sigma rule YAML")
 }
 
 /// Filter rules by tag, level, or id. Each non-empty filter must match (AND).

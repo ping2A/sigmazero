@@ -261,6 +261,8 @@ impl SigmaEngine {
     /// Process a single log file (native only)
     #[cfg(not(target_arch = "wasm32"))]
     fn process_log_file(&self, file_path: &Path) -> Result<Vec<RuleMatch>> {
+        use crate::injected_log::{parse_json_log_line, PreparedLogLine, INJECTED_RULE, INJECTED_RULES};
+
         info!("Reading log file: {:?}", file_path);
         
         let file = File::open(file_path)
@@ -269,25 +271,31 @@ impl SigmaEngine {
         let reader = BufReader::new(file);
         let lines: Vec<String> = reader.lines().collect::<Result<_, _>>()?;
         
-        info!("Processing {} log entries in parallel", lines.len());
+        info!("Processing {} log lines", lines.len());
 
-        // Parse logs in parallel
-        let log_entries: Vec<LogEntry> = lines
-            .par_iter()
-            .filter_map(|line| {
-                serde_json::from_str::<LogEntry>(line)
-                    .map_err(|e| {
-                        debug!("Failed to parse log line: {}", e);
-                        e
-                    })
-                    .ok()
-            })
-            .collect();
+        let mut global_entries: Vec<LogEntry> = Vec::new();
+        let mut injected_tasks: Vec<(Vec<SigmaRule>, LogEntry)> = Vec::new();
+        for line in &lines {
+            match parse_json_log_line(line) {
+                Ok(PreparedLogLine::Standard(log)) => global_entries.push(log),
+                Ok(PreparedLogLine::Injected { rules, log }) => injected_tasks.push((rules, log)),
+                Err(e) => {
+                    if !line.contains(INJECTED_RULE) && !line.contains(INJECTED_RULES) {
+                        match serde_json::from_str::<LogEntry>(line) {
+                            Ok(log) => global_entries.push(log),
+                            Err(_) => debug!("Failed to parse log line: {} | {}", e, &line.chars().take(120).collect::<String>()),
+                        }
+                    } else {
+                        debug!("Failed to parse line with embedded rules: {} | {}", e, &line.chars().take(120).collect::<String>());
+                    }
+                }
+            }
+        }
 
-        info!("Successfully parsed {} log entries", log_entries.len());
+        info!("Parsed {} log entries ({} with embedded test rules)", global_entries.len() + injected_tasks.len(), injected_tasks.len());
 
         // Wrap logs in Arc once so matches can share references (no full log clone per match)
-        let log_arcs: Vec<Arc<LogEntry>> = log_entries.into_iter().map(Arc::new).collect();
+        let log_arcs: Vec<Arc<LogEntry>> = global_entries.into_iter().map(Arc::new).collect();
 
         // Evaluate each log against all rules in parallel (skip count rules; handled below)
         let mut matches: Vec<RuleMatch> = log_arcs
@@ -352,6 +360,15 @@ impl SigmaEngine {
             }
         }
 
+        for (rules, log) in injected_tasks {
+            match self.evaluate_log_entry_with_injected_rules(&log, rules) {
+                Ok(m) => matches.extend(m),
+                Err(e) => {
+                    debug!("Embedded rule evaluation failed: {}", e);
+                }
+            }
+        }
+
         // Record matches in correlation engine if enabled
         if let Some(ref correlation_engine) = self.correlation_engine {
             for rule_match in &matches {
@@ -360,6 +377,25 @@ impl SigmaEngine {
         }
 
         Ok(matches)
+    }
+
+    /// Evaluate one log with only the given rules (e.g. from JSON field `_sigma_injected_rule` on a
+    /// line). Inherits `workers` and field mapping. Does not use this engine’s loaded rules or
+    /// correlation. Used for self-contained test rules in log files.
+    pub fn evaluate_log_entry_with_injected_rules(
+        &self,
+        log: &LogEntry,
+        rules: Vec<SigmaRule>,
+    ) -> Result<Vec<RuleMatch>> {
+        if rules.is_empty() {
+            return Ok(vec![]);
+        }
+        let mut eng = SigmaEngine::new(Some(self.workers));
+        if let Some(ref m) = self.field_map {
+            eng.set_field_map(m.clone());
+        }
+        eng.load_rules_from_rules(rules)?;
+        Ok(eng.evaluate_log_entry(log))
     }
 
     /// Evaluate a single log entry against all rules (for streaming/real-time processing)

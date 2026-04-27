@@ -23,6 +23,7 @@ A high-performance Rust application for evaluating Sigma detection rules against
 - 🔍 **Pattern Matching**: Includes wildcard matching, regex support, and IP/domain detection
 - 🚀 **Fast**: Optimized for speed with zero-copy parsing where possible
 - 📝 **JSON Output**: Results in structured JSON format for easy integration
+- **Embedded test rules (JSONL)**: Optional `_sigma_injected_rule` / `_sigma_injected_rules` fields per line to ship Sigma YAML inside a log and evaluate it in isolation (no global rules file required; useful for testing and CI)
 
 ## Installation
 
@@ -49,31 +50,39 @@ cargo build --release
 sigma-zero --rules-dir ./examples/rules --logs ./examples/logs
 ```
 
+Omit `--rules-dir` if every line that should match supplies its own rule via [`_sigma_injected_rule`](#embedded-test-rules-in-logs) (see `examples/logs/injection_test.jsonl`).
+
 ### Command Line Options
 
 ```
 Options:
-  -r, --rules-dir <RULES_DIR>     Path to directory containing Sigma rules (YAML files)
-  -l, --logs <LOGS>               Path to log file or directory containing log files (JSON format)
-  -c, --correlation-rules <DIR>   Path to directory containing correlation rules (optional)
-  -w, --workers <WORKERS>         Number of parallel workers (defaults to number of CPU cores)
-  -o, --output <OUTPUT>           Output file for matches (defaults to stdout)
-  -f, --format <FORMAT>           Output format: json, jsonl, or text [default: text]
-      --validate                  Validate rules only (parse and exit; no log evaluation)
-      --filter-tag <TAG>          Filter rules by tag (can be repeated)
-      --filter-level <LEVEL>      Filter rules by level (can be repeated)
-      --filter-id <ID>            Filter rules by id (can be repeated)
-      --field-map <MAP>           Field mapping rule_field:log_field (e.g. CommandLine:command_line). Comma-separated or repeated
-  -v, --verbose                   Enable verbose logging
-  -h, --help                      Print help
-  -V, --version                   Print version
+  -r, --rules-dir <PATH>         Directory or file of Sigma rules (YAML). Optional if logs use
+                                 only per-line _sigma_injected_rule / _sigma_injected_rules
+  -l, --logs <LOGS>            Path to log file or directory (JSON/JSONL; one object per line)
+  -c, --correlation-rules      Optional correlation rules directory
+  -w, --workers <N>            Parallel workers (default: CPU count)
+  -o, --output                 Output file (default: stdout)
+  -f, --format <json|jsonl|text>  [default: text]
+      --validate                Parse rules and exit (no log evaluation)
+      --filter-tag / --filter-level / --filter-id
+      --field-map <MAP>         e.g. CommandLine:command_line; comma-separated or repeated
+  -v, --verbose
+  -h, --help
+  -V, --version
 ```
+
+Run `sigma-zero --help` for the exact list on your build.
 
 ### Examples
 
 **Process a single log file:**
 ```bash
 sigma-zero -r ./rules -l ./logs/security.json
+```
+
+**Evaluate a JSONL file that only uses embedded test rules (no `--rules-dir`):**
+```bash
+sigma-zero -l examples/logs/injection_test.jsonl
 ```
 
 **Process a directory of logs with 8 parallel workers:**
@@ -122,7 +131,7 @@ journalctl -f -o json | sigma-zero-streaming -r ./rules
 ```
 
 **Streaming options:**
-- `-r, --rules-dir` – Path to Sigma rules
+- `-r, --rules-dir` – Path to Sigma rules (optional if stdin lines use `_sigma_injected_rule` only)
 - `-c, --correlation-rules` – Optional correlation rules directory
 - `-b, --batch-size <N>` – Process logs in batches of N (default: 1 for real-time)
 - `-f, --output-format <json|text|silent>` – Output format (default: text)
@@ -144,6 +153,41 @@ Logs must be in JSON format with one log entry per line (JSONL). Each log entry 
   "source_ip": "192.168.1.50"
 }
 ```
+
+### Embedded test rules in logs
+
+For **testing, debugging, and CI**, any JSONL line can include Sigma rule YAML **in the line itself**. Those fields are **removed** before matching, so they are never part of the evaluated event (and do not appear in `matched_log` in the output).
+
+| Field | Meaning |
+|-------|--------|
+| `_sigma_injected_rule` | String: one complete Sigma rule as **YAML** (same structure as a `.yml` file). |
+| `_sigma_injected_rules` | Array of strings (each a full rule YAML), **or** a single string. Multiple YAML documents in one string can be separated by a line containing only `---` between them. |
+
+**Behavior**
+
+- A line with `_sigma_injected_rule` (and/or `_sigma_injected_rules`) is evaluated with **only** the embedded rules — it does not use the global engine rules from `--rules-dir` for that line.
+- Lines **without** those keys are evaluated with the **global** rule set (from `--rules-dir` when provided).
+- You can omit `--rules-dir` entirely and rely only on embedded rules on the lines you care about.
+
+**Example (one line, pretty-printed for reading):**
+
+```json
+{
+  "_sigma_injected_rule": "title: test-rule\ndetection:\n  selection:\n    command_line|re: '.*-enc\\s+ABC.*'\n  condition: selection\n",
+  "command_line": "powershell.exe -enc ABC",
+  "process_name": "powershell.exe"
+}
+```
+
+A runnable sample file is in **`examples/logs/injection_test.jsonl`**. To try it with no global rules:
+
+```bash
+sigma-zero -l examples/logs/injection_test.jsonl
+```
+
+The streaming binary **`sigma-zero-streaming`** supports the same per-line fields on stdin: `--rules-dir` is optional when lines only use embedded rules.
+
+**Library API:** `sigma_zero::injected_log::parse_json_log_line`, and `SigmaEngine::evaluate_log_entry_with_injected_rules` for the same idea in code. A full file pipeline test is `test_evaluate_jsonl_file_with_embedded_sigma_rules` in `src/engine_tests.rs`.
 
 ## Sigma Rule Format
 
